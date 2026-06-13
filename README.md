@@ -70,7 +70,7 @@ The converter and ASCII chart include copy formatting for:
 
 | Platform | Examples |
 |----------|---------|
-| Siemens | `DINT#`, `16#`, `2#`, `T#` |
+| Siemens | `L#`, `16#`, `2#`, `T#` |
 | Allen-Bradley | `16#` |
 | Mitsubishi | `H`, `B` |
 | FANUC Robot | `B`, `H` |
