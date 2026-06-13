@@ -389,7 +389,7 @@ def load_preferences() -> dict:
                 for item in data.get("copy_formats", [])
                 if str(item.get("name", "")).strip() not in ("", "None", "Custom")
             ]
-            enabled_groups = ["User Custom"]
+            enabled_groups = list(DEFAULT_COPY_FORMAT_GROUPS.keys()) + ["User Custom"]
 
         groups = copy_format_groups_with_user_group(groups)
         preferences["theme"] = theme
@@ -974,7 +974,7 @@ def add_labeled_entry_row(
 # Apply selected copy-format prefix and suffix state
 def apply_copy_format_state(combo: QComboBox, prefix_box: QLineEdit, suffix_box: QLineEdit) -> None:
     selected = combo.currentText()
-    prefix, suffix = COPY_FORMATS[selected]
+    prefix, suffix = COPY_FORMATS.get(selected, ("", ""))
     custom = selected == "Custom"
 
     if not custom:
@@ -998,7 +998,7 @@ def format_copy_value(value: str, combo: QComboBox, prefix_box: QLineEdit, suffi
         prefix = prefix_box.text()
         suffix = suffix_box.text()
     else:
-        prefix, suffix = COPY_FORMATS[selected]
+        prefix, suffix = COPY_FORMATS.get(selected, ("", ""))
 
     return f"{prefix}{value}{suffix}"
 
@@ -1123,14 +1123,11 @@ def add_dialog_status_bar(layout: QVBoxLayout, owner, initial: str = "Ready.") -
 def update_owner_status(owner, message: str) -> None:
     if hasattr(owner, "set_status"):
         owner.set_status(message)
-
-    if hasattr(owner, "dialog_status"):
+    elif hasattr(owner, "dialog_status"):
         owner.dialog_status.setText(message)
-
-    if hasattr(owner, "status") and hasattr(owner.status, "setText"):
+    elif hasattr(owner, "status") and hasattr(owner.status, "setText"):
         owner.status.setText(message)
-
-    if hasattr(owner, "status_label") and hasattr(owner.status_label, "setText"):
+    elif hasattr(owner, "status_label") and hasattr(owner.status_label, "setText"):
         owner.status_label.setText(message)
 
 # ------------------------------------------------------------------------------
@@ -1486,97 +1483,67 @@ def get_windows_app_theme() -> str:
 def apply_app_theme(theme: str) -> None:
     t = THEMES["Dark" if theme == "Dark" else "Light"]
 
-    main_bg               = t["main_bg"]
-    panel_bg              = t["panel_bg"]
-    input_bg              = t["input_bg"]
-
-    text                  = t["text"]
-    title                 = t["title"]
-    subtitle              = t["subtitle"]
-
-    button_bg             = t["button_bg"]
-    button_hover          = t["button_hover"]
-    button_pressed        = t["button_pressed"]
-
-    border                = t["border"]
-    input_border          = t["input_border"]
-    accent                = t["accent"]
-
-    menu_selected         = t["menu_selected"]
-    group_title_bg        = t["group_title_bg"]
-
-    tab_selected          = t["tab_selected"]
-
-    table_header          = t["table_header"]
-    table_bg              = t["table_bg"]
-    table_alt             = t["table_alt"]
-    table_selected        = t["table_selected"]
-    table_selected_active = t["table_selected_active"]
-
-    locked_text           = t["locked_text"]
-    disabled_text         = t["disabled_text"]
-
     qss = f"""
-    QMainWindow, QWidget {{background: {main_bg}; color: {text}; font-family: Segoe UI; font-size: 9pt; }}
-    QMenuBar, QMenu {{background: {panel_bg}; color: {text}; }}
-    QMenuBar::item:selected, QMenu::item:selected {{background: {accent}; }}
-    QMenu::item:disabled {{color: {disabled_text}; }}
-    QTabWidget::pane {{border: 1px solid {border}; }}
-    QGroupBox {{border: 1px solid {border}; margin-top: 12px; padding-top: 10px; }}
+    QMainWindow, QWidget {{background: {t['main_bg']}; color: {t['text']}; font-family: Segoe UI; font-size: 9pt; }}
+    QMenuBar, QMenu {{background: {t['panel_bg']}; color: {t['text']}; }}
+    QMenuBar::item:selected, QMenu::item:selected {{background: {t['accent']}; }}
+    QMenu::item:disabled {{color: {t['disabled_text']}; }}
+    QTabWidget::pane {{border: 1px solid {t['border']}; }}
+    QGroupBox {{border: 1px solid {t['border']}; margin-top: 12px; padding-top: 10px; }}
     QGroupBox::title {{
         subcontrol-origin: margin;
         subcontrol-position: top left;
         left: 8px;
         padding: 0 4px;
-        background: {group_title_bg};
-        color: {title};
+        background: {t['group_title_bg']};
+        color: {t['title']};
     }}
-    QTabBar::tab {{background: {panel_bg}; color: {text}; border: 1px solid {border}; padding: 6px 12px; }}
-    QTabBar::tab:selected {{background: {tab_selected}; font-weight: bold; }}
-    QTabBar::tab:!selected {{background: {panel_bg}; }}
+    QTabBar::tab {{background: {t['panel_bg']}; color: {t['text']}; border: 1px solid {t['border']}; padding: 6px 12px; }}
+    QTabBar::tab:selected {{background: {t['tab_selected']}; font-weight: bold; }}
+    QTabBar::tab:!selected {{background: {t['panel_bg']}; }}
     QLineEdit, QComboBox, QTableWidget {{
-        background: {input_bg};
-        color: {text};
-        border: 1px solid {border};
+        background: {t['input_bg']};
+        color: {t['text']};
+        border: 1px solid {t['border']};
         padding: 3px;
     }}
     QPushButton {{
-        background: {button_bg};
-        border: 1px solid {accent};
-        color: {text};
+        background: {t['button_bg']};
+        border: 1px solid {t['accent']};
+        color: {t['text']};
         padding: 6px 12px;
         min-height: 24px;
     }}
-    QPushButton:hover {{background: {button_hover}; }}
-    QPushButton:pressed {{background: {panel_bg}; }}
+    QPushButton:hover {{background: {t['button_hover']}; }}
+    QPushButton:pressed {{background: {t['panel_bg']}; }}
     QToolButton {{
         background: transparent;
         border: 2px solid transparent;
         border-radius: 6px;
-        color: {text};
+        color: {t['text']};
         padding: 8px;
     }}
     QToolButton:hover {{
-        background: {button_hover};
-        border: 2px solid {accent};
+        background: {t['button_hover']};
+        border: 2px solid {t['accent']};
     }}
     QToolButton:pressed {{
-        background: {button_pressed};
+        background: {t['button_pressed']};
     }}
     QHeaderView::section {{
-        background: {table_header};
-        color: {text};
-        border: 1px solid {border};
+        background: {t['table_header']};
+        color: {t['text']};
+        border: 1px solid {t['border']};
         padding: 4px;
     }}
-    QStatusBar {{background: {main_bg}; color: {subtitle}; border-top: 1px solid {border}; }}
-    QLabel#AppTitle, QLabel#DialogTitle {{font-size: 16pt; font-weight: bold; color: {title}; }}
-    QLabel#SubTitle {{color: {subtitle}; }}
-    QTableWidget {{alternate-background-color: {table_alt}; background-color: {table_bg}; }}
-    QTableWidget::item:selected {{background: {table_selected}; color: {text}; }}
-    QTableWidget::item:selected:active {{background: {table_selected_active}; }}
-    QLineEdit[lockedDisplay="true"] {{background: {main_bg}; border: 1px solid {main_bg}; color: {locked_text}; font-weight: bold; }}
-    QPushButton[lockedDisplay="true"] {{color: {disabled_text}; font-weight: normal; }}
+    QStatusBar {{background: {t['main_bg']}; color: {t['subtitle']}; border-top: 1px solid {t['border']}; }}
+    QLabel#AppTitle, QLabel#DialogTitle {{font-size: 16pt; font-weight: bold; color: {t['title']}; }}
+    QLabel#SubTitle {{color: {t['subtitle']}; }}
+    QTableWidget {{alternate-background-color: {t['table_alt']}; background-color: {t['table_bg']}; }}
+    QTableWidget::item:selected {{background: {t['table_selected']}; color: {t['text']}; }}
+    QTableWidget::item:selected:active {{background: {t['table_selected_active']}; }}
+    QLineEdit[lockedDisplay="true"] {{background: {t['main_bg']}; border: 1px solid {t['main_bg']}; color: {t['locked_text']}; font-weight: bold; }}
+    QPushButton[lockedDisplay="true"] {{color: {t['disabled_text']}; font-weight: normal; }}
     """
 
     QApplication.instance().setStyleSheet(qss)  # type: ignore[union-attr]

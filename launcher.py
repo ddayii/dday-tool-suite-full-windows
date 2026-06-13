@@ -29,14 +29,6 @@ class LauncherWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle(LAUNCHER_TITLE)
-
-        ico = resource_path(LAUNCHER_ICON_ICO)
-        png = resource_path(LAUNCHER_ICON_PNG)
-        if os.path.exists(ico):
-            self.setWindowIcon(QIcon(ico))
-        elif os.path.exists(png):
-            self.setWindowIcon(QIcon(png))
-
         self._build_ui()
         apply_app_theme(resolve_theme(get_saved_theme_pref()))
 

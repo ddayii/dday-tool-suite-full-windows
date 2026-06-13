@@ -101,22 +101,21 @@ def build_sheet(ws, rows, validation_sheet_name: str):
     total_rows = max(2, len(data_rows) + AUTO_ENTRY_ROWS + 1)
 
     for r in range(2, total_rows + 1):
-        for c in range(1, 5):
-            ws.cell(r, c).border = border
-
         data_index = r - 2
         if data_index < len(data_rows):
             row = data_rows[data_index]
-            ws.cell(r, 1, row.number)
-            ws.cell(r, 2, row.comment)
-            ws.cell(r, 3, "YES" if row.enabled else "NO")
-            ws.cell(r, 4, row.notes)
+            values = [row.number, row.comment, "YES" if row.enabled else "NO", row.notes]
         else:
             # Formula rows remain visibly blank until a comment is entered.
-            ws.cell(r, 1, f'=IF($B{r}<>"",IFERROR(MAX($A$1:A{r-1})+1,1),"")')
-            ws.cell(r, 2, "")
-            ws.cell(r, 3, f'=IF($B{r}<>"","YES","")')
-            ws.cell(r, 4, "")
+            values = [
+                f'=IF($B{r}<>"",IFERROR(MAX($A$1:A{r-1})+1,1),"")',
+                "",
+                f'=IF($B{r}<>"","YES","")',
+                "",
+            ]
+        for c, val in enumerate(values, 1):
+            cell = ws.cell(r, c, val)
+            cell.border = border
 
     widths = [12, 45, 12, 50]
     for i, width in enumerate(widths, 1):

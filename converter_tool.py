@@ -155,6 +155,13 @@ class ConversionTool(QMainWindow):
     # --------------------------------------------------------------------------
 
 
+    @property
+    def _scalar_output_fields(self):
+        return [
+            self.s_dec, self.s_hex, self.s_bin, self.s_oct,
+            self.le, self.be, self.char, self.le_ascii, self.be_ascii,
+        ]
+
     # ------------------------------------------------------------------------------
     # Copy current value using selected copy format
     def copy_formatted_from_menu(self) -> None:
@@ -162,12 +169,7 @@ class ConversionTool(QMainWindow):
             return
 
         edit = focused_line_edit()
-        valid_fields = [
-            self.s_dec, self.s_hex, self.s_bin, self.s_oct,
-            self.le, self.be, self.char, self.le_ascii, self.be_ascii
-        ]
-
-        if edit not in valid_fields:
+        if edit not in self._scalar_output_fields:
             return
 
         self.copy_value(self.format_scalar_copy(edit.text()), "")
@@ -179,10 +181,7 @@ class ConversionTool(QMainWindow):
             return False
 
         edit = focused_line_edit()
-        return edit in [
-            self.s_dec, self.s_hex, self.s_bin, self.s_oct,
-            self.le, self.be, self.char, self.le_ascii, self.be_ascii
-        ]
+        return edit in self._scalar_output_fields
 
 
     # --------------------------------------------------------------------------

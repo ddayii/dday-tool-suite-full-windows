@@ -136,7 +136,9 @@ class AsciiDialog(QDialog):
         self.extended = QCheckBox("Show Extended 128-255")
         self.extended.setObjectName("SubTitle")
         self.extended.stateChanged.connect(self.populate)
-        self.extended.stateChanged.connect(lambda state: self.show_extended_action.setChecked(bool(state)))
+        self.extended.stateChanged.connect(
+            lambda state: set_checkable_state_silent(self.show_extended_action, bool(state))
+        )
 
         self.always_on_top_toggle = QCheckBox("Always On Top")
         self.always_on_top_toggle.setObjectName("SubTitle")
@@ -224,8 +226,8 @@ class AsciiDialog(QDialog):
     # ------------------------------------------------------------------------------
     # Synchronize extended ASCII menu action to checkbox state
     def set_extended_from_menu(self, checked: bool) -> None:
-        if self.extended.isChecked() != checked:
-            self.extended.setChecked(checked)
+        set_checkable_state_silent(self.extended, checked)
+        self.populate()
 
 
     # --------------------------------------------------------------------------

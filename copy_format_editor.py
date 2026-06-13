@@ -245,12 +245,6 @@ class CopyFormatGroupManagerDialog(QDialog):
         self.load_rows()
         update_owner_status(self, f"Added group: {name}. Click Save to apply.")
 
-        for _, name_edit, _, _, _, _ in self.rows:
-            if name_edit.text().strip() == name:
-                name_edit.setFocus()
-                name_edit.selectAll()
-                break
-
 
     # ------------------------------------------------------------------------------
     # Delete a selected group
@@ -1066,8 +1060,9 @@ class CopyFormatEditorDialog(QDialog):
     # ------------------------------------------------------------------------------
     # Add a new user copy-format row
     def add_format(self) -> None:
-        if self.USER_GROUP_NAME not in PREFERENCES.get("enabled_copy_format_groups", []):
-            PREFERENCES["enabled_copy_format_groups"].append(self.USER_GROUP_NAME)
+        groups = PREFERENCES.setdefault("enabled_copy_format_groups", [])
+        if self.USER_GROUP_NAME not in groups:
+            groups.append(self.USER_GROUP_NAME)
 
         existing = {name_edit.text().strip() for name_edit, _, _, _, _, _ in self.rows}
         base = "New Format"
