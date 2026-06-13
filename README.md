@@ -2,7 +2,7 @@
 
 A collection of engineering utilities for PLC and robot programmers. Available as a Windows desktop application and a Progressive Web App (PWA) for mobile and browser use.
 
-**Version:** 2.1.1  
+**Version:** 2.1.2  
 **Platform:** Windows 10/11 (desktop) · iOS · Android · any modern browser (PWA)
 
 ---

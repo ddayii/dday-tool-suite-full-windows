@@ -5,10 +5,10 @@
 ;   2. Install Inno Setup 6 from https://jrsoftware.org/isinfo.php
 ;   3. Open this file in Inno Setup Compiler and click Build > Compile
 ;      (or right-click the .iss in Explorer and choose "Compile")
-;   Output: installer\DDay Controls Tool Suite Setup 2.1.1.exe
+;   Output: installer\DDay Controls Tool Suite Setup 2.1.2.exe
 
 #define AppName      "DDay Controls Tool Suite"
-#define AppVersion   "2.1.1"
+#define AppVersion   "2.1.2"
 #define AppPublisher "DDay Controls"
 #define AppURL       ""
 #define DistDir      "dist"

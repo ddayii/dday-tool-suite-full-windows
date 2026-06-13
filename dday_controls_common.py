@@ -42,7 +42,7 @@ from dday_prefs import *      # noqa: F401, F403
 # ******************************************************************************
 
 APP_NAME = "DDay Controls Conversion Tool"
-APP_VERSION = "2.1.1"
+APP_VERSION = "2.1.2"
 COMPANY_NAME = "DDay Controls"
 ICON_ICO = "DDay_Converter.ico"
 ICON_PNG = "DDay_Converter.png"
