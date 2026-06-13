@@ -1,0 +1,614 @@
+DI,1,*ImmediateStop
+DI,2,*Hold
+DI,3,*SafeSpeed
+DI,4,*CycleStop
+DI,5,FaultReset
+DI,6,CycleStart
+DI,7,ToHome
+DI,8,MotionEnable
+DI,9,DryCycle
+DI,10,ReqToEnter
+DI,11,Auto
+DI,12,Manual
+DI,13,ToHomeReq
+DI,14,ForceFullSpeed
+DI,15,ClearDataReq
+DI,16,ReadDataReq
+DI,17,UnldStaReady
+DI,18,UnldCmpltACK
+DI,19,MachClmpCmp
+DI,20,LoadStaReady
+DI,21,LoadCmpltACK
+DI,22,MchUnclmpCmp
+DI,25,LdCarrCmpACK
+DI,26,UnldCarrCmpACK
+DI,27,RFIDReqACK
+DI,28,SkipRFID
+DI,29,Carr 1 PartPres
+DI,30,Carr 2 PartPres
+DI,37,PerchOnly
+DI,38,AtPerchACK
+DI,40,StayInsideMach
+DI,81,PartStyleBit 1
+DI,82,PartStyleBit 2
+DI,83,PartStyleBit 3
+DI,84,PartStyleBit 4
+DI,85,PartStyleBit 5
+DI,86,PartStyleBit 6
+DI,87,PartStyleBit 7
+DI,88,PartStyleBit 8
+DI,89,UnldStaBit 1
+DI,90,UnldStaBit 2
+DI,91,UnldStaBit 3
+DI,92,UnldStaBit 4
+DI,93,UnldStaBit 5
+DI,94,UnldStaBit 6
+DI,95,UnldStaBit 7
+DI,96,UnldStaBit 8
+DI,97,UnldLocBit 1
+DI,98,UnldLocBit 2
+DI,99,UnldLocBit 3
+DI,100,UnldLocBit 4
+DI,101,UnldLocBit 5
+DI,102,UnldLocBit 6
+DI,103,UnldLocBit 7
+DI,104,UnldLocBit 8
+DI,105,LoadStaBit 1
+DI,106,LoadStaBit 2
+DI,107,LoadStaBit 3
+DI,108,LoadStaBit 4
+DI,109,LoadStaBit 5
+DI,110,LoadStaBit 6
+DI,111,LoadStaBit 7
+DI,112,LoadStaBit 8
+DI,113,LoadLocBit 1
+DI,114,LoadLocBit 2
+DI,115,LoadLocBit 3
+DI,116,LoadLocBit 4
+DI,117,LoadLocBit 5
+DI,118,LoadLocBit 6
+DI,119,LoadLocBit 7
+DI,120,LoadLocBit 8
+DI,121,AppFltAnsBit 1
+DI,122,AppFltAnsBit 2
+DI,123,AppFltAnsBit 3
+DI,124,AppFltAnsBit 4
+DI,125,AppFltAnsBit 5
+DI,126,AppFltAnsBit 6
+DI,127,AppFltAnsBit 7
+DI,128,AppFltAnsBit 8
+DI,129,OvrrdSpdBit 1
+DI,130,OvrrdSpdBit 2
+DI,131,OvrrdSpdBit 3
+DI,132,OvrrdSpdBit 4
+DI,133,OvrrdSpdBit 5
+DI,134,OvrrdSpdBit 6
+DI,135,OvrrdSpdBit 7
+DI,136,OvrrdSpdBit 8
+DI,155,CarrLoadOK
+DI,156,CarrLoadNOK
+DI,157,OK2EntIntrZn 1
+DI,158,OK2EntIntrZn 2
+DI,159,OK2EntIntrZn 3
+DI,160,OK2EntIntrZn 4
+DI,161,OK2EntIntrZn 5
+DI,162,OK2EntIntrZn 6
+DI,163,OthRbtClrIntZn 1
+DI,164,OthRbtClrIntZn 2
+DI,165,OthRbtClrIntZn 3
+DI,166,OthRbtClrIntZn 4
+DI,167,OthRbtClrIntZn 5
+DI,168,OthRbtClrIntZn 6
+DI,169,LoadCarrBit 1
+DI,170,LoadCarrBit 2
+DI,171,LoadCarrBit 3
+DI,172,LoadCarrBit 4
+DI,173,LoadCarrBit 5
+DI,174,LoadCarrBit 6
+DI,175,LoadCarrBit 7
+DI,176,LoadCarrBit 8
+DI,177,UnldCarrBit 1
+DI,178,UnldCarrBit 2
+DI,179,UnldCarrBit 3
+DI,180,UnldCarrBit 4
+DI,181,UnldCarrBit 5
+DI,182,UnldCarrBit 6
+DI,183,UnldCarrBit 7
+DI,184,UnldCarrBit 8
+DI,185,ApplFltAnswrd
+DI,257,DCSJPC1
+DI,258,Carr@Maint
+DI,259,Carr@OP140-1
+DI,260,Carr@OP140-2
+DI,261,Carr@OP140-3
+DI,262,Carr@InfdBuff1-4
+DI,263,Carr@InfdBuff5-8
+DI,264,Carr@XfrStnd1
+DI,265,Carr@IntZn3
+DI,266,Carr@IntZn4
+DI,267,DCSJPC11
+DI,268,DCSJPC12
+DI,269,DCSJPC13
+DI,270,DCSJPC14
+DI,271,NearMinRailPos
+DI,272,NearMaxRailPos
+DI,273,MainZone
+DI,274,UnderRailNoFly
+DI,275,Rail/PCGapNoFly
+DI,276,UndrDrpPnNoFly
+DI,277,ClrIntZn3
+DI,278,BackNoFly
+DI,279,OP140-1NoFly1
+DI,280,OP140-1NoFly2
+DI,281,OP140-1NoFly3
+DI,282,ClrIntZn4
+DI,283,OP140-2&3NoFly1
+DI,284,OP140-2&3NoFly2
+DI,285,OP140-2&3NoFly3
+DI,286,DCSCPC14
+DI,287,Infd1-4NoFly1
+DI,288,Infd1-4NoFly2
+DI,290,InMaintSpeedZn
+DO,1,CommandEnable
+DO,2,SystemReady
+DO,3,ProgramRunning
+DO,4,ProgramPaused
+DO,5,MotionHeld
+DO,6,Faulted
+DO,7,AtHome
+DO,8,TP Enabled
+DO,9,DryCycle
+DO,10,OK ToEnter
+DO,11,RequestToEnter
+DO,12,NotAborted
+DO,13,Heartbeat
+DO,14,NotAtFullSpeed
+DO,15,ClearDataACK
+DO,16,ReadDataACK
+DO,17,CheckReady
+DO,18,UnldComplete
+DO,19,ReqMachClamp
+DO,20,Simulated IO
+DO,21,LoadComplete
+DO,22,ReqMachUnclmp
+DO,24,CollGuardEnbld
+DO,25,CarrLoadCmplt
+DO,26,CarrUnldCmplt
+DO,27,ReqRFID
+DO,28,SkipRFIDACK
+DO,31,CarrUnldFault
+DO,33,ClrMachFixt 1
+DO,34,ClrMachFixt 2
+DO,35,ClrMachFixt 3
+DO,36,ClrMachFixt 4
+DO,37,PerchOnlyACK
+DO,38,@Perch
+DO,40,@InMachPerch
+DO,41,CarrLoadFault
+DO,42,MaintenanceReq
+DO,44,OverDripPan
+DO,45,Carr 1 PrtPrsDry
+DO,46,Carr 2 PrtPrsDry
+DO,47,RailGrpRunning
+DO,48,RailGrpPaused
+DO,49,@Home
+DO,50,@Maintenance
+DO,51,ClrofMach 1
+DO,52,ClrofMach 2
+DO,53,ClrofMach 3
+DO,54,ClrofMach 4
+DO,55,ClrofMach 5
+DO,56,ClrofMach 6
+DO,57,ClrofMach 7
+DO,58,ClrofStaID 10
+DO,59,ClrofStaID 11
+DO,60,ClrofStaID 12
+DO,61,ClrofStaID 13
+DO,62,ClrofStaID 14
+DO,63,ClrofStaID 17
+DO,64,ClrofStaID 18
+DO,65,TaskStopUnxpctd
+DO,66,BadPLCInput
+DO,67,CollDetected
+DO,68,UserInputReq
+DO,69,AirNot OK
+DO,70,StyleError
+DO,71,Auto T1 in T1
+DO,72,TPEStopPressed
+DO,73,OPEStopPressed
+DO,74,ServoOff
+DO,75,FenceOpen
+DO,76,BadPartOrient
+DO,77,SwitchFail
+DO,78,SpareFault
+DO,79,SpareFault
+DO,80,SpareFault
+DO,81,PartStyleACKBit 1
+DO,82,PartStyleACKBit 2
+DO,83,PartStyleACKBit 3
+DO,84,PartStyleACKBit 4
+DO,85,PartStyleACKBit 5
+DO,86,PartStyleACKBit 6
+DO,87,PartStyleACKBit 7
+DO,88,PartStyleACKBit 8
+DO,89,UnldStaACKBit 1
+DO,90,UnldStaACKBit 2
+DO,91,UnldStaACKBit 3
+DO,92,UnldStaACKBit 4
+DO,93,UnldStaACKBit 5
+DO,94,UnldStaACKBit 6
+DO,95,UnldStaACKBit 7
+DO,96,UnldStaACKBit 8
+DO,97,UnldLocACKBit 1
+DO,98,UnldLocACKBit 2
+DO,99,UnldLocACKBit 3
+DO,100,UnldLocACKBit 4
+DO,101,UnldLocACKBit 5
+DO,102,UnldLocACKBit 6
+DO,103,UnldLocACKBit 7
+DO,104,UnldLocACKBit 8
+DO,105,LoadStaACKBit 1
+DO,106,LoadStaACKBit 2
+DO,107,LoadStaACKBit 3
+DO,108,LoadStaACKBit 4
+DO,109,LoadStaACKBit 5
+DO,110,LoadStaACKBit 6
+DO,111,LoadStaACKBit 7
+DO,112,LoadStaACKBit 8
+DO,113,LoadLocACKBit 1
+DO,114,LoadLocACKBit 2
+DO,115,LoadLocACKBit 3
+DO,116,LoadLocACKBit 4
+DO,117,LoadLocACKBit 5
+DO,118,LoadLocACKBit 6
+DO,119,LoadLocACKBit 7
+DO,120,LoadLocACKBit 8
+DO,121,ApplFaultBit 1
+DO,122,ApplFaultBit 2
+DO,123,ApplFaultBit 3
+DO,124,ApplFaultBit 4
+DO,125,ApplFaultBit 5
+DO,126,ApplFaultBit 6
+DO,127,ApplFaultBit 7
+DO,128,ApplFaultBit 8
+DO,129,OvrdSpdEchBit 1
+DO,130,OvrdSpdEchBit 2
+DO,131,OvrdSpdEchBit 3
+DO,132,OvrdSpdEchBit 4
+DO,133,OvrdSpdEchBit 5
+DO,134,OvrdSpdEchBit 6
+DO,135,OvrdSpdEchBit 7
+DO,136,OvrdSpdEchBit 8
+DO,137,RailPosBit 1
+DO,138,RailPosBit 2
+DO,139,RailPosBit 3
+DO,140,RailPosBit 4
+DO,141,RailPosBit 5
+DO,142,RailPosBit 6
+DO,143,RailPosBit 7
+DO,144,RailPosBit 8
+DO,145,RailPosBit 9
+DO,146,RailPosBit 10
+DO,147,RailPosBit 11
+DO,148,RailPosBit 12
+DO,149,RailPosBit 13
+DO,150,RailPosBit 14
+DO,151,RailPosBit 15
+DO,152,RailPosBit 16
+DO,153,GripOpen
+DO,154,GripClosed
+DO,155,CarrLoadReq
+DO,156,GripPartPres
+DO,157,ReqIntfZn 1
+DO,158,ReqIntfZn 2
+DO,159,ReqIntfZn 3
+DO,160,ReqIntfZn 4
+DO,161,ReqIntfZn 5
+DO,162,ReqIntfZn 6
+DO,163,ClrIntrZn 1
+DO,164,ClrIntrZn 2
+DO,165,ClrIntrZn 3
+DO,166,ClrIntrZn 4
+DO,167,ClrIntrZn 5
+DO,168,ClrIntrZn 6
+DO,169,LoadCarrACKBit 1
+DO,170,LoadCarrACKBit 2
+DO,171,LoadCarrACKBit 3
+DO,172,LoadCarrACKBit 4
+DO,173,LoadCarrACKBit 5
+DO,174,LoadCarrACKBit 6
+DO,175,LoadCarrACKBit 7
+DO,176,LoadCarrACKBit 8
+DO,177,UnldCarrACKBit 1
+DO,178,UnldCarrACKBit 2
+DO,179,UnldCarrACKBit 3
+DO,180,UnldCarrACKBit 4
+DO,181,UnldCarrACKBit 5
+DO,182,UnldCarrACKBit 6
+DO,183,UnldCarrACKBit 7
+DO,184,UnldCarrACKBit 8
+DO,185,ApplFltAnswdACK
+DO,186,RailInMotion
+DO,187,TempClrIntZn1
+DO,188,TempClrIntZn2
+DO,189,TempClrIntZn3
+DO,190,TempClrIntZn4
+DO,191,TempClrIntZn5
+DO,192,TempClrIntZn6
+DO,257,Arm@Home
+DO,258,Arm@Maint
+DO,259,Reserved
+DO,260,Reserved
+DO,261,Reserved
+DO,262,ApplicationFault
+DO,263,SystemPrompt
+DO,325,AlwUnderDripPan
+DO,326,AllowMaint
+DO,327,AllowOP140-1
+DO,328,AllowOP140-2&3
+DO,329,DCSNSI5
+DO,330,AllowInfdBuff1-4
+DO,331,AllowInfdBuff5-8
+DO,332,AllowIntZn4
+DO,333,OP127SafetyOK
+DO,334,OP137SafetyOK
+DO,335,AllowIntZn3
+DO,336,AllowBack
+DO,337,DCSNSI13
+DO,338,DCSNSI14
+DO,339,DCSNSI15
+DO,340,DCSNSI16
+RI,1,Grip 1 Unclmpd
+RI,2,Grip 1 ClmponPrt
+RI,3,Grip 2 Unclmpd
+RI,4,Gripr2 ClmponPrt
+RI,5,Grip 3 Unclmpd
+RI,6,Gripr3 ClmponPrt
+RI,7,GripPartPres
+RO,1,UnclampGrip 1
+RO,2,ClampGrip 1
+GI,1,LoadLocID
+GI,3,UnldStaID
+GI,4,UnldLocID
+GI,5,LoadStaID
+GI,6,LoadLocID
+GI,7,ApplFltAnswer
+GI,8,OvrrdSpeed
+GI,10,LoadCarrID
+GI,11,UnldCarrID
+GO,1,PartStyleACK
+GO,3,UnldStaIDACK
+GO,4,UnldLocIDACK
+GO,5,LoadStaIDACK
+GO,6,LoadLocIDACK
+GO,7,ApplFault
+GO,8,OvrrdSpdEcho
+GO,9,RailPosition
+GO,10,LoadCarrIDACK
+GO,11,UnldCarrIDACK
+UI,1,*ImmediateStop
+UI,2,*Hold
+UI,3,*SafeSpeed
+UI,4,*CycleStop
+UI,5,FaultReset
+UI,6,CycleStart
+UI,7,ToHome
+UI,8,MotionEnable
+UO,1,CommandEnable
+UO,2,SystemReady
+UO,3,ProgramRunning
+UO,4,ProgramPaused
+UO,5,MotionHeld
+UO,6,Faulted
+UO,7,NotUsed
+UO,8,TP Enabled
+R,1,CurrMach#
+R,2,MaintinAuto
+R,6,ReturnfromRdy
+R,7,MoveOutofSta
+R,9,LoadCarr 1 Reqd
+R,10,LoadCarr 2 Reqd
+R,11,Carr 1 PartPres
+R,12,Carr 2 PartPres
+R,13,CarrFlagOff
+R,14,RailTermType
+R,15,RailPosition
+R,16,Reserved
+R,17,Reserved
+R,20,RailTaskStatus
+R,21,RailCurrSta#
+R,22,RailDestSta#
+R,23,CurrSta#
+R,24,RFIDRequired
+R,27,MachUFrame#
+R,28,CarrLoadPR#
+R,29,CarrUnloadPR#
+R,30,StaClearDO#
+R,31,StaPerchPR#
+R,32,LoadStaPR#
+R,33,UnldStaPR#
+R,34,TempMachType
+R,35,LoadtoCarr#
+R,36,UnldfromCarr#
+R,37,MachOrient R#
+R,38,Reserved
+R,39,Reserved
+R,40,NewPartStyle
+R,41,Reserved
+R,42,MaxPartStyles
+R,43,CurrPartStyle
+R,44,CurrCarrFixt#
+R,45,Cell OP#
+R,46,MaxMachTypes
+R,47,Reserved
+R,50,UnldSta#
+R,51,UnldLoc#
+R,52,MaxUnldStas
+R,53,MaxUnldLocs
+R,54,LastSta#
+R,55,LoadSta#
+R,56,LoadLoc#
+R,57,MaxLoadStas
+R,58,MaxLoadLocs
+R,59,CnvSameLd/Ul
+R,60,Reserved
+R,61,Grip 1 PartStat
+R,62,Grip 2 PartStat
+R,63,Reserved
+R,64,Carr 1 PartStat
+R,65,Carr 2 PartStat
+R,66,TempOp
+R,67,Scratch #1
+R,68,Scratch #2
+R,69,Scratch #3
+R,70,Reserved
+R,71,MachADumpTime
+R,72,MachBDumpTime
+R,73,MachCDumpTime
+R,74,MachDDumpTime
+R,78,RecPos 1 MtnTyp
+R,79,RecPos 2 MtnTyp
+R,80,RecPos 3 MtnTyp
+R,81,RecPos 4 MtnTyp
+R,82,RecPos 5 MtnTyp
+R,83,RecPos 6 MtnTyp
+R,84,Check@RecPrch
+R,85,RecPlanned
+R,86,RecUFrame#
+R,87,RecUTool#
+R,88,RecStartPR#
+R,89,RecEndPR#
+R,90,RecExecPR#
+R,91,Rec@LD/ULPnt
+R,92,RecGrip 1 State
+R,93,RecGrip 2 State
+R,94,RecPerchPR#
+R,95,RelPrtVerfyByps
+R,96,PLCBypass
+R,97,Check@RecPrch
+R,98,TempInMain
+R,99,TempInMain
+R,100,MaxRecovDist
+R,101,NumofPerches
+R,102,FirstPerchPR#
+R,103,DestPerchPR#
+R,104,CurrPerchPR#
+R,105,ShortestDistPR#
+R,106,SkipCurpos
+R,107,PosOrientBAD
+R,108,F1 KeyPressed
+R,109,NewPayload#
+R,110,F3 KeyPressed
+R,111,DestRailPR#
+R,112,CurrRailPR#
+R,113,RouterTest
+R,114,#RstClrUser
+R,115,MsgSeverity
+R,116,MenuDone
+R,117,YNAnswer
+R,118,ListAnswer
+R,119,List 2 Answer
+R,120,RobotID
+R,122,MaxGripRetries
+R,123,SafetyFlag
+R,124,DryRun
+R,125,StartFromAbort
+R,126,EndCycleStop
+R,127,StartupStatGrp 1
+R,129,ToolsMacroFlag
+R,130,AbortShl_IO
+R,131,StartupStatGrp 2
+R,132,ErrorCodeReg
+R,133,FaultRstCntr
+R,134,DfltPrgOverride
+R,135,NilpUFrame
+R,136,BaseUTool
+R,137,GripperNum
+R,138,NumofGrippers
+R,139,GripperRetryCnt
+R,140,GripperTimeout
+R,141,Grip 1 OpnDly
+R,142,Grip 1 ClsDly
+R,143,Grip 1 Status
+R,144,Reserved
+R,145,Reserved
+R,146,Reserved
+R,147,Reserved
+R,148,Grip 2 Status
+R,149,Reserved
+R,150,PLCMenuDone
+R,161,JumpRetLBL# 1
+R,162,JumpRetLBL# 2
+R,163,JumpRetLBL# 3
+R,164,TempInput#
+R,165,MachADumpFlag
+R,166,MachBDumpFlag
+R,167,MachCDumpFlag
+R,168,MachDDumpFlag
+R,170,TimerRailSta
+R,171,MsgWrote 1
+R,172,TimerRailTask
+R,174,Mach 1 Pos
+R,175,Mach 2 Pos
+R,176,Mach 3 Pos
+R,177,Mach 4 Pos
+R,178,Mach 5 Pos
+R,179,Mach 6 Pos
+R,180,Mach 1 MchTyp
+R,181,Mach 2 MchTyp
+R,182,Mach 3 MchTyp
+R,183,Mach 4 MchTyp
+R,184,Mach 5 MchTyp
+R,185,Mach 6 MchTyp
+R,186,GripperType
+R,187,Gripper2Way
+R,188,InfdConvPk/Pl
+R,189,HasPartStand
+R,190,HasHandoff
+R,191,HasShuttle
+R,192,MachAPartOrnt
+R,193,MachBPartOrnt
+R,194,MachCPartOrnt
+R,195,MachDPartOrnt
+R,196,ConvPartOrnt
+R,199,SIMULATE
+R,200,CGSensitivity
+R,219,CycleTimeReg
+R,220,Temp
+R,225,M#
+R,229,Temp
+R,230,ConvUL/LDCT
+R,231,MachLl/LDCT
+R,237,4 PartAverage
+R,240,CycleTime
+R,241,AverageCycTim
+R,242,Reset
+R,243,Total
+R,244,Count
+R,245,4 Count
+R,246,Index
+R,247,CycleTime 1
+R,248,CycleTime 2
+R,249,CycleTime 3
+R,250,CycleTime 4
+F,1,MovetoStation
+F,2,EnablePLCCmdLog
+F,3,RunoffEnable
+F,4,Loading
+F,5,Unloading
+F,6,ToRFID
+F,7,Grip 1 Closed
+F,8,Grip 2 Closed
+F,10,PerchOnly
+F,11,IntrZn 1 Used
+F,12,IntrZn 2 Used
+F,13,IntrZn 3 Used
+F,14,IntrZn 4 Used
+F,15,IntrZn 5 Used
+F,16,IntrZn 6 Used
+F,21,IntfZn 1 Locked
+F,22,IntfZn 2 Locked
+F,23,IntfZn 3 Locked
+F,24,IntfZn 4 Locked
+F,25,IntfZn 5 Locked
+F,26,IntfZn 6 Locked

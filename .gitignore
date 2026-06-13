@@ -1,0 +1,8 @@
+dist/
+build/
+installer/
+__pycache__/
+*.pyc
+*.pyo
+*.spec.bak
+pwa/
