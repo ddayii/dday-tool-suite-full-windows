@@ -49,7 +49,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="DDay Controls Engineering Calculator",
+    name="DDay Controls Calculators",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

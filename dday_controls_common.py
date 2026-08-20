@@ -44,7 +44,7 @@ from dday_engineering import *  # noqa: F401, F403
 # ******************************************************************************
 
 APP_NAME = "DDay Controls Conversion Tool"
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.2.1"
 COMPANY_NAME = "DDay Controls"
 ICON_ICO = "DDay_Converter.ico"
 ICON_PNG = "DDay_Converter.png"
@@ -507,9 +507,9 @@ TOOL_REGISTRY = OrderedDict({
         "icon_png": "DDay_ASCII_Chart.png",
     },
     "engineering_calculator": {
-        "display_name": "Engineering Calculator",
-        "window_title": "DDay Controls Engineering Calculator",
-        "exe_name": "DDay Controls Engineering Calculator.exe",
+        "display_name": "Calculators",
+        "window_title": "DDay Controls Calculators",
+        "exe_name": "DDay Controls Calculators.exe",
         "py_name": "engineering_calculator.py",
         "module_name": "engineering_calculator",
         "class_name": "EngineeringCalculator",
