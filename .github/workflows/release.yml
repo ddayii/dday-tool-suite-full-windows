@@ -1,19 +1,29 @@
 name: Build installer
 
-# Pushing a v* tag builds every EXE, compiles the Inno Setup installer, and
-# opens a draft release with the installer attached. The release is left as a
-# draft on purpose: someone reads the notes and clicks Publish. Drop the
-# --draft flag in the last step to publish straight away.
+# Builds every EXE, compiles the Inno Setup installer, and opens a draft
+# release with the installer attached. The release is left as a draft on
+# purpose: someone reads the notes and clicks Publish. Drop the --draft flag
+# in the last step to publish straight away.
 #
-# Run it manually (Actions > Build installer > Run workflow) to check a build
-# without tagging anything — that path builds and uploads the installer as a
-# run artifact but creates no release.
+# Two ways in:
+#   * push a v* tag, or
+#   * Actions > Build installer > Run workflow, giving the tag to cut.
+#     The runner creates the tag itself, which is also the way to release
+#     from an environment that cannot push tags.
+#
+# Running it manually with the tag left blank just builds and uploads the
+# installer as a run artifact, creating no tag and no release.
 
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to create and release, e.g. v2.2.0. Leave blank to build only.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -27,6 +37,23 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v4
 
+      - name: Work out which tag, if any, this run is cutting
+        id: release
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSHED_TAG: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          $tag = if ($env:EVENT_NAME -eq 'push') { $env:PUSHED_TAG } else { "$env:INPUT_TAG".Trim() }
+
+          if ($tag -and $tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Tag '$tag' is not of the form v1.2.3."
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "tag=$tag"
+          if ($tag) { Write-Host "Cutting $tag" } else { Write-Host "Build only, no release" }
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -39,10 +66,12 @@ jobs:
       # before, so a mismatch fails here rather than shipping an installer
       # whose filename disagrees with the version inside it.
       - name: Check the tag matches the version in the source
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.release.outputs.tag != ''
         shell: pwsh
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
-          $expected = '${{ github.ref_name }}' -replace '^v', ''
+          $expected = $env:RELEASE_TAG -replace '^v', ''
 
           $sources = [ordered]@{
             'dday_controls_common.py' = 'APP_VERSION\s*=\s*"([\d.]+)"'
@@ -62,7 +91,7 @@ jobs:
 
             $found = $hit.Matches[0].Groups[1].Value
             if ($found -ne $expected) {
-              Write-Host "::error file=$file::states $found but the tag is ${{ github.ref_name }}"
+              Write-Host "::error file=$file::states $found but the tag is $env:RELEASE_TAG"
               $mismatched = $true
             } else {
               Write-Host "$file -> $found"
@@ -106,13 +135,19 @@ jobs:
           retention-days: 14
 
       - name: Open a draft release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: steps.release.outputs.tag != ''
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_SHA: ${{ github.sha }}
         run: |
           $exe = Get-ChildItem installer\*.exe | Select-Object -First 1
-          gh release create '${{ github.ref_name }}' $exe.FullName `
-            --title '${{ github.ref_name }}' `
+
+          # --target creates the tag at this commit when it does not exist yet,
+          # which is what lets a manual run cut a release.
+          gh release create $env:RELEASE_TAG $exe.FullName `
+            --title $env:RELEASE_TAG `
+            --target $env:RELEASE_SHA `
             --generate-notes `
             --draft
