@@ -14,6 +14,8 @@ hiddenimports = [
     "converter_tool",
     "copy_format_editor",
     "dday_controls_common",
+    "dday_engineering",
+    "engineering_calculator",
     "fanuc_io_tool",
     "fanuc_io_parser",
     "fanuc_template",

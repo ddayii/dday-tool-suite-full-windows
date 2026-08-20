@@ -5,17 +5,17 @@ block_cipher = None
 project_dir = Path.cwd()
 
 datas = []
-for icon_name in ("DDay_Converter.ico", "DDay_Converter.png"):
+for icon_name in ("DDay_Engineering_Calculator.ico", "DDay_Engineering_Calculator.png"):
     icon_path = project_dir / icon_name
     if icon_path.exists():
         datas.append((str(icon_path), "."))
 
 hiddenimports = [
     "ascii_chart",
+    "converter_tool",
     "copy_format_editor",
     "dday_controls_common",
     "dday_engineering",
-    "engineering_calculator",
     "fanuc_io_tool",
     "fanuc_io_parser",
     "fanuc_template",
@@ -25,7 +25,7 @@ hiddenimports = [
 ]
 
 a = Analysis(
-    ["converter_tool.py"],
+    ["engineering_calculator.py"],
     pathex=[str(project_dir)],
     binaries=[],
     datas=datas,
@@ -49,7 +49,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name="DDay Controls Conversion Tool",
+    name="DDay Controls Engineering Calculator",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -62,5 +62,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon="DDay_Converter.ico" if (project_dir / "DDay_Converter.ico").exists() else None,
+    icon="DDay_Engineering_Calculator.ico" if (project_dir / "DDay_Engineering_Calculator.ico").exists() else None,
 )

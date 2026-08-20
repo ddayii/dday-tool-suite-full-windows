@@ -2,7 +2,7 @@
 
 A collection of engineering utilities for PLC and robot programmers. Available as a Windows desktop application and a Progressive Web App (PWA) for mobile and browser use.
 
-**Version:** 2.1.2  
+**Version:** 2.2.0  
 **Platform:** Windows 10/11 (desktop) · iOS · Android · any modern browser (PWA)
 
 ---
@@ -15,6 +15,30 @@ Convert values between decimal, hexadecimal, binary, and octal. Supports 8, 16, 
 ### ASCII Chart
 Full ASCII reference table (0–127, optional 128–255 extended). Columns: Char, Dec, Hex, Oct, Bin, Name. Live search by character, decimal, hex (prefix `0x` or bare hex digits), or control name. Click any column header to copy that value with your chosen format preset.
 
+### Engineering Calculator
+Five calculators for controls work, on their own tabs:
+
+- **Base Math** — a programmer calculator over DEC, HEX, BIN, and OCT. Full operator set
+  (`+ - * / % & | ^ ~ << >>` and parentheses) with C precedence, 8/16/32/64-bit words, and a
+  signed/unsigned toggle. Division truncates toward zero and the remainder takes the sign of
+  the dividend, so results match structured text rather than Python. Every step wraps to the
+  selected word size, and an overflow is called out rather than hidden.
+- **Analog Scaling** — raw counts to engineering units and back, with presets for Siemens S7
+  (0–27648 and bipolar), Allen-Bradley SLC 4–20 mA (3277–16384), plain 12/13/14/15/16-bit
+  converters, and raw mA or volt signals. Reports percent of span, units per count, and
+  whether the input sits outside the range, with optional clamping.
+- **Ohm's Law** — enter any two of voltage, current, resistance, and power; the other two
+  are solved.
+- **Motor & Drive** — shaft torque in lb-ft and N-m, synchronous speed and slip, three- and
+  single-phase real/apparent/reactive power, full-load current, and gearbox output speed and
+  torque.
+- **Encoder & Motion** — counts per revolution at x1/x2/x4 decode, distance per count through
+  a leadscrew, roller, or rotary axis with an optional gear reduction, counts for a given
+  travel, and encoder output frequency at speed.
+
+Torque constants are derived from `P = T·ω` rather than the rounded 5252 and 9550, so the
+imperial and metric figures agree with each other.
+
 ### FANUC I/O Tool
 Generate FANUC robot I/O comment templates and KAREL loader scripts from a RoboGuide CSV or DDay XLSX template. Drag-and-drop file input, preview, and CSV/KAREL export.
 
@@ -23,7 +47,7 @@ Generate FANUC robot I/O comment templates and KAREL loader scripts from a RoboG
 ## Installation (Windows)
 
 1. Download the latest installer from the [Releases](../../releases) page
-2. Run `DDay Controls Tool Suite Setup 2.1.1.exe`
+2. Run `DDay Controls Tool Suite Setup 2.2.0.exe`
 3. Choose a full or custom installation (individual tools are optional)
 4. Launch from the Start Menu or desktop shortcut
 
@@ -33,7 +57,7 @@ Generate FANUC robot I/O comment templates and KAREL loader scripts from a RoboG
 
 ## PWA (Mobile & Browser)
 
-The Scalar Converter, Unit Converter, and ASCII Chart are also available as a Progressive Web App:
+The Scalar Converter, Unit Converter, ASCII Chart, and Engineering Calculator are also available as a Progressive Web App:
 
 **[https://ddayii.github.io/dday_tool_suite_pwa](https://ddayii.github.io/dday_tool_suite_pwa)**
 
@@ -56,6 +80,7 @@ Build all executables:
 ```bash
 pyinstaller --noconfirm --clean converter_tool.spec
 pyinstaller --noconfirm --clean ascii_chart.spec
+pyinstaller --noconfirm --clean engineering_calculator.spec
 pyinstaller --noconfirm --clean fanuc_io_tool.spec
 pyinstaller --noconfirm --clean launcher.spec
 ```
