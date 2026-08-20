@@ -338,6 +338,280 @@ def literal_in_base(value: int, base: str, bits: int) -> str:
 
 # ******************************************************************************
 #
+# DECIMAL EXPRESSION EVALUATOR
+#
+# ******************************************************************************
+#
+# The base evaluator above is deliberately integer-only: bases, word sizes and
+# two's-complement wrapping have no meaning for 2.5.  A plain calculator needs
+# real numbers, so it gets its own evaluator rather than bending that one.
+#
+
+
+DECIMAL_FUNCTIONS = {
+    "sqrt": math.sqrt,
+    "abs": abs,
+}
+
+# Lowest binding first; power is handled separately because it is right
+# associative and binds tighter than unary minus.
+_DECIMAL_PRECEDENCE = [("+", "-"), ("*", "/", "%")]
+
+
+# ------------------------------------------------------------------------------
+# Split decimal expression text into number, operator and function tokens
+def tokenize_decimal(text: str) -> list[tuple[str, object]]:
+    tokens: list[tuple[str, object]] = []
+    index = 0
+    length = len(text)
+
+    while index < length:
+        char = text[index]
+
+        if char.isspace() or char in "_,":
+            index += 1
+            continue
+
+        if char in "()":
+            tokens.append(("paren", char))
+            index += 1
+            continue
+
+        if char in "+-*/%^":
+            tokens.append(("op", char))
+            index += 1
+            continue
+
+        if char.isdigit() or char == ".":
+            start = index
+            seen_point = False
+
+            while index < length:
+                here = text[index]
+                if here.isdigit() or here in "_,":
+                    index += 1
+                elif here == "." and not seen_point:
+                    seen_point = True
+                    index += 1
+                else:
+                    break
+
+            # An exponent only counts when digits actually follow it, so that
+            # "2e" is a clear error rather than a silently truncated number.
+            if index < length and text[index] in "eE":
+                after = index + 1
+                if after < length and text[after] in "+-":
+                    after += 1
+                if after < length and text[after].isdigit():
+                    index = after
+                    while index < length and text[index].isdigit():
+                        index += 1
+
+            literal = re.sub(r"[_,]", "", text[start:index])
+            if literal == ".":
+                raise CalcError("A lone decimal point is not a number.")
+
+            try:
+                tokens.append(("num", float(literal)))
+            except ValueError:
+                raise CalcError(f"'{literal}' is not a number.")
+            continue
+
+        if char.isalpha():
+            start = index
+            while index < length and text[index].isalpha():
+                index += 1
+
+            name = text[start:index].lower()
+            if name not in DECIMAL_FUNCTIONS:
+                raise CalcError(f"Unknown function '{name}'.")
+
+            tokens.append(("func", name))
+            continue
+
+        raise CalcError(f"Unexpected character '{char}'.")
+
+    return tokens
+
+
+# ------------------------------------------------------------------------------
+# Evaluate tokenized decimal expressions with a recursive-descent parser
+class _DecimalParser:
+
+    def __init__(self, tokens: list[tuple[str, object]]) -> None:
+        self.tokens = tokens
+        self.position = 0
+
+    # --------------------------------------------------------------------------
+    # Return the current token without consuming it
+    def peek(self) -> tuple[str, object] | None:
+        return self.tokens[self.position] if self.position < len(self.tokens) else None
+
+    # --------------------------------------------------------------------------
+    # Parse a binary-operator level, descending to the next tighter level
+    def parse_binary(self, level: int) -> float:
+        if level >= len(_DECIMAL_PRECEDENCE):
+            return self.parse_unary()
+
+        operators = _DECIMAL_PRECEDENCE[level]
+        value = self.parse_binary(level + 1)
+
+        while True:
+            token = self.peek()
+            if token is None or token[0] != "op" or token[1] not in operators:
+                return value
+
+            self.position += 1
+            right = self.parse_binary(level + 1)
+            value = self.apply(str(token[1]), value, right)
+
+    # --------------------------------------------------------------------------
+    # Apply one binary operator
+    def apply(self, operator: str, left: float, right: float) -> float:
+        if operator == "+":
+            return left + right
+        if operator == "-":
+            return left - right
+        if operator == "*":
+            return left * right
+        if operator == "/":
+            if right == 0:
+                raise CalcError("Division by zero.")
+            return left / right
+        if operator == "%":
+            if right == 0:
+                raise CalcError("Division by zero.")
+            # fmod, not Python's %, so the sign follows the dividend the way
+            # C and JavaScript do and both builds of the tool agree.
+            return math.fmod(left, right)
+        raise CalcError(f"Unknown operator '{operator}'.")
+
+    # --------------------------------------------------------------------------
+    # Parse unary plus and minus
+    def parse_unary(self) -> float:
+        token = self.peek()
+        if token is not None and token[0] == "op" and token[1] in ("-", "+"):
+            self.position += 1
+            operand = self.parse_unary()
+            return -operand if token[1] == "-" else operand
+        return self.parse_power()
+
+    # --------------------------------------------------------------------------
+    # Parse the right-associative power operator
+    def parse_power(self) -> float:
+        base = self.parse_primary()
+
+        token = self.peek()
+        if token is not None and token[0] == "op" and token[1] == "^":
+            self.position += 1
+            exponent = self.parse_unary()
+            try:
+                result = base ** exponent
+            except (OverflowError, ZeroDivisionError) as error:
+                raise CalcError(str(error))
+            if isinstance(result, complex):
+                raise CalcError("That power has no real answer.")
+            return float(result)
+
+        return base
+
+    # --------------------------------------------------------------------------
+    # Parse a number, a function call, or a parenthesized sub-expression
+    def parse_primary(self) -> float:
+        token = self.peek()
+        if token is None:
+            raise CalcError("Expression ends unexpectedly.")
+
+        if token[0] == "num":
+            self.position += 1
+            return float(token[1])
+
+        if token[0] == "func":
+            self.position += 1
+            opening = self.peek()
+            if opening is None or opening[1] != "(":
+                raise CalcError(f"'{token[1]}' needs a value in parentheses.")
+
+            self.position += 1
+            argument = self.parse_binary(0)
+
+            closing = self.peek()
+            if closing is None or closing[1] != ")":
+                raise CalcError("Missing closing parenthesis.")
+            self.position += 1
+
+            try:
+                return float(DECIMAL_FUNCTIONS[str(token[1])](argument))
+            except ValueError:
+                raise CalcError(f"'{token[1]}' has no real answer for that value.")
+
+        if token[0] == "paren" and token[1] == "(":
+            self.position += 1
+            value = self.parse_binary(0)
+
+            closing = self.peek()
+            if closing is None or closing[1] != ")":
+                raise CalcError("Missing closing parenthesis.")
+            self.position += 1
+            return value
+
+        if token[0] == "paren":
+            raise CalcError("Unmatched closing parenthesis.")
+
+        raise CalcError(f"Operator '{token[1]}' is missing a value.")
+
+
+# ------------------------------------------------------------------------------
+# Evaluate a decimal expression
+def evaluate_decimal(text: str) -> float:
+    if not text.strip():
+        raise CalcError("No expression entered.")
+
+    tokens = tokenize_decimal(text)
+    if not tokens:
+        raise CalcError("No expression entered.")
+
+    parser = _DecimalParser(tokens)
+    value = parser.parse_binary(0)
+
+    remaining = parser.peek()
+    if remaining is not None:
+        if remaining[0] == "paren":
+            raise CalcError("Unmatched closing parenthesis.")
+        raise CalcError(f"Unexpected trailing '{remaining[1]}'.")
+
+    if math.isinf(value):
+        raise CalcError("Result is too large to show.")
+
+    return value
+
+
+# ------------------------------------------------------------------------------
+# Format a decimal result for a calculator display
+def format_decimal_result(value: float, significant: int = 12) -> str:
+    """Round away binary representation noise, so 0.1 + 0.2 reads as 0.3."""
+    if math.isnan(value):
+        return "—"
+    if math.isinf(value):
+        return "∞" if value > 0 else "-∞"
+
+    cleaned = float(f"{value:.{significant}g}")
+    if cleaned == 0:
+        return "0"
+
+    magnitude = abs(cleaned)
+    if magnitude >= 1e16 or magnitude < 1e-6:
+        mantissa, _, exponent = f"{cleaned:.{significant - 1}e}".partition("e")
+        return mantissa.rstrip("0").rstrip(".") + "e" + exponent
+
+    if cleaned == int(cleaned):
+        return str(int(cleaned))
+
+    return repr(cleaned)
+
+
+# ******************************************************************************
+#
 # ANALOG SCALING
 #
 # ******************************************************************************

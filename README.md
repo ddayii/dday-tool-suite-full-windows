@@ -16,13 +16,17 @@ Convert values between decimal, hexadecimal, binary, and octal. Supports 8, 16, 
 Full ASCII reference table (0–127, optional 128–255 extended). Columns: Char, Dec, Hex, Oct, Bin, Name. Live search by character, decimal, hex (prefix `0x` or bare hex digits), or control name. Click any column header to copy that value with your chosen format preset.
 
 ### Engineering Calculator
-Five calculators for controls work, on their own tabs:
+Six calculators for controls work, on their own tabs:
 
-- **Base Math** — a programmer calculator over DEC, HEX, BIN, and OCT. Full operator set
+- **Standard** — a plain decimal calculator: the four functions, powers, square root,
+  reciprocal, remainder, memory keys, and parentheses. Results are rounded to 12 significant
+  digits, so 0.1 + 0.2 reads as 0.3 rather than 0.30000000000000004.
+- **Programmer** — a whole-number calculator over DEC, HEX, BIN, and OCT. Full operator set
   (`+ - * / % & | ^ ~ << >>` and parentheses) with C precedence, 8/16/32/64-bit words, and a
   signed/unsigned toggle. Division truncates toward zero and the remainder takes the sign of
   the dividend, so results match structured text rather than Python. Every step wraps to the
-  selected word size, and an overflow is called out rather than hidden.
+  selected word size, and an overflow is called out rather than hidden. The decimal point is
+  deliberately disabled here — bases and word sizes have no meaning for 2.5.
 - **Analog Scaling** — raw counts to engineering units and back, with presets for Siemens S7
   (0–27648 and bipolar), Allen-Bradley SLC 4–20 mA (3277–16384), plain 12/13/14/15/16-bit
   converters, and raw mA or volt signals. Reports percent of span, units per count, and
