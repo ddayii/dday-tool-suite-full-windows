@@ -10,8 +10,9 @@ shared with the PWA build of the same tool.
 
 from __future__ import annotations
 
-import sys
 import os
+import re
+import sys
 
 from dday_controls_common import *
 
@@ -19,6 +20,37 @@ from dday_controls_common import *
 CALC_APP_NAME = "DDay Controls Engineering Calculator"
 CALC_ICON_ICO = "DDay_Engineering_Calculator.ico"
 CALC_ICON_PNG = "DDay_Engineering_Calculator.png"
+
+# The app-wide stylesheet puts 9pt Segoe UI on every widget, and a stylesheet
+# beats setFont(), so the display's own stylesheet is what actually wins.
+_DISPLAY_QSS = "font-family: Consolas, 'Courier New', monospace; font-size: 16pt; font-weight: bold;"
+_MONO_QSS = "font-family: Consolas, 'Courier New', monospace;"
+
+CALC_BASE_ORDER = ("HEX", "DEC", "OCT", "BIN")
+CALC_DIGIT_ORDER = "0123456789ABCDEF"
+CALC_BASE_DIGIT_COUNT = {"HEX": 16, "DEC": 10, "OCT": 8, "BIN": 2}
+
+CALC_MEMORY_KEYS = ("MC", "MR", "MS", "M+", "M-")
+
+CALC_BITWISE_KEYS = (
+    ("AND", " & "), ("OR", " | "), ("XOR", " ^ "), ("NOT", "~"), ("MOD", " % "),
+)
+
+# Laid out like the Windows programmer keypad, so it reads as a calculator.
+CALC_KEYPAD_ROWS = (
+    (("A", "digit", "A"), ("\u00ab", "ins", " << "), ("\u00bb", "ins", " >> "),
+     ("C", "act", "clear"), ("\u232b", "act", "back")),
+    (("B", "digit", "B"), ("(", "ins", "("), (")", "ins", ")"),
+     ("%", "ins", " % "), ("\u00f7", "ins", " / ")),
+    (("C", "digit", "C"), ("7", "digit", "7"), ("8", "digit", "8"),
+     ("9", "digit", "9"), ("\u00d7", "ins", " * ")),
+    (("D", "digit", "D"), ("4", "digit", "4"), ("5", "digit", "5"),
+     ("6", "digit", "6"), ("\u2212", "ins", " - ")),
+    (("E", "digit", "E"), ("1", "digit", "1"), ("2", "digit", "2"),
+     ("3", "digit", "3"), ("+", "ins", " + ")),
+    (("F", "digit", "F"), ("\u00b1", "act", "negate"), ("0", "digit", "0"),
+     ("=", "act", "equals")),
+)
 
 _LABEL_WIDTH = 125
 _FIELD_WIDTH = 150
@@ -47,6 +79,9 @@ class EngineeringCalculator(QMainWindow):
         super().__init__()
         register_tool_window("engineering_calculator", self)
         self.theme_name = resolve_theme(get_saved_theme_pref())
+        self.calc_base = "HEX"
+        self.calc_memory = 0
+        self.calc_last_value = 0
         self.setWindowTitle(CALC_APP_NAME)
 
         icon_ico = resource_path(CALC_ICON_ICO)
@@ -316,104 +351,178 @@ class EngineeringCalculator(QMainWindow):
     def _build_calc_tab(self) -> None:
         layout = self.scrollable_page(self.calc_tab)
 
-        config = QGroupBox("Expression")
-        cfg = QGridLayout(config)
-        cfg.setHorizontalSpacing(10)
-        cfg.setVerticalSpacing(8)
+        layout.addWidget(self._build_calc_display())
+        layout.addWidget(self._build_calc_config())
+        layout.addWidget(self._build_calc_keypad())
+
+        hint = QLabel(
+            "Type into the display or use the keys. Operators follow C precedence; division "
+            "truncates toward zero and the remainder takes the sign of the dividend, matching "
+            "structured text. Every step wraps to the selected word size."
+        )
+        hint.setObjectName("SubTitle")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        layout.addStretch(1)
+
+        self.set_calc_base("HEX")
+
+    # ------------------------------------------------------------------------------
+    # Build the display and the live value in every base
+    def _build_calc_display(self) -> QGroupBox:
+        box = QGroupBox("Value")
+        column = QVBoxLayout(box)
+        column.setSpacing(8)
 
         self.c_expr = make_entry()
-        self.c_expr.setPlaceholderText("e.g. (0x1F << 4) | 3")
-        cfg.addWidget(form_label("Expression", _LABEL_WIDTH), 0, 0)
-        cfg.addWidget(self.c_expr, 0, 1, 1, 3)
+        self.c_expr.setText("0")
+        self.c_expr.setAlignment(Qt.AlignRight)
+        self.c_expr.setStyleSheet(_DISPLAY_QSS)
+        self.c_expr.setMinimumHeight(52)
+        column.addWidget(self.c_expr)
 
-        self.c_base = QComboBox()
-        self.c_base.addItems(list(BASE_NAMES))
-        self.c_base.setFixedWidth(_FIELD_WIDTH)
+        rows = QGridLayout()
+        rows.setColumnStretch(1, 1)
+        rows.setVerticalSpacing(4)
+
+        self.c_base_group = QButtonGroup(self)
+        self.c_base_buttons: dict[str, QRadioButton] = {}
+        self.c_value_fields: dict[str, QLineEdit] = {}
+
+        for row, base in enumerate(CALC_BASE_ORDER):
+            # A radio button is the honest control here: picking the base the
+            # display is read in is exactly a one-of-four choice.
+            selector = QRadioButton(base)
+            selector.setFixedWidth(70)
+            self.c_base_group.addButton(selector)
+            self.c_base_buttons[base] = selector
+
+            field = make_entry(read_only=True)
+            field.setStyleSheet(_MONO_QSS)
+            self.c_value_fields[base] = field
+
+            copy = QPushButton("Copy")
+            copy.setFixedWidth(COPY_BUTTON_WIDTH)
+            copy.clicked.connect(
+                lambda _=False, e=field: self.copy_value(self.format_calc_copy(e.text()))
+            )
+
+            rows.addWidget(selector, row, 0)
+            rows.addWidget(field, row, 1)
+            rows.addWidget(copy, row, 2)
+            rows.setRowMinimumHeight(row, _ROW_HEIGHT)
+
+            selector.clicked.connect(lambda _=False, b=base: self.set_calc_base(b))
+
+        column.addLayout(rows)
+
+        # Kept for the Edit menu's formatted-copy action.
+        self.c_hex = self.c_value_fields["HEX"]
+        self.c_dec = self.c_value_fields["DEC"]
+        self.c_oct = self.c_value_fields["OCT"]
+        self.c_bin = self.c_value_fields["BIN"]
+
+        self.c_expr.textChanged.connect(self.update_calc)
+        self.c_expr.returnPressed.connect(lambda: self.calc_action("equals"))
+        return box
+
+    # ------------------------------------------------------------------------------
+    # Build the word size, signed mode and copy format controls
+    def _build_calc_config(self) -> QGroupBox:
+        box = QGroupBox("Word")
+        grid = QGridLayout(box)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(8)
 
         self.c_width = QComboBox()
-        self.c_width.addItems(list(CALC_BIT_WIDTHS))
-        self.c_width.setCurrentText("16-bit")
+        self.c_width.addItems(list(CALC_WORD_SIZES.keys()))
+        self.c_width.setCurrentText("WORD  (16-bit)")
         self.c_width.setFixedWidth(_FIELD_WIDTH)
 
         self.c_signed = QCheckBox("Signed")
 
-        cfg.addWidget(form_label("Input Base", _LABEL_WIDTH), 1, 0)
-        cfg.addWidget(self.c_base, 1, 1, Qt.AlignLeft)
-        cfg.addWidget(form_label("Word Size", 75), 1, 2)
-        cfg.addWidget(self.c_width, 1, 3, Qt.AlignLeft)
-
-        cfg.addWidget(self.c_signed, 2, 1, Qt.AlignLeft)
+        grid.addWidget(form_label("Word Size", _LABEL_WIDTH), 0, 0)
+        grid.addWidget(self.c_width, 0, 1, Qt.AlignLeft)
+        grid.addWidget(self.c_signed, 0, 2, Qt.AlignLeft)
 
         self.c_range = QLabel()
         self.c_range.setObjectName("SubTitle")
-        cfg.addWidget(self.c_range, 2, 2, 1, 2)
+        grid.addWidget(self.c_range, 1, 1, 1, 2)
 
-        cfg.setColumnStretch(4, 1)
-        layout.addWidget(config)
-
-        # Copy format gets its own row rather than a fifth and sixth column,
-        # which would squeeze the four-column form above it.
-        format_row = QHBoxLayout()
-        format_row.addWidget(form_label("Copy Format", _LABEL_WIDTH))
+        self.c_error = self.error_label()
+        grid.addWidget(self.c_error, 2, 0, 1, 4)
 
         self.calc_copy_format = QComboBox()
         self.calc_copy_format.addItems(list(COPY_FORMATS.keys()))
         self.calc_copy_format.setCurrentText("None")
         self.calc_copy_format.setFixedWidth(_FIELD_WIDTH)
-        format_row.addWidget(self.calc_copy_format)
 
-        format_row.addWidget(form_label("Prefix", 45))
         self.calc_copy_prefix = QLineEdit()
         self.calc_copy_prefix.setFixedWidth(80)
         self.calc_copy_prefix.setObjectName("LockedDisplayLineEdit")
-        format_row.addWidget(self.calc_copy_prefix)
 
-        format_row.addWidget(form_label("Suffix", 45))
         self.calc_copy_suffix = QLineEdit()
         self.calc_copy_suffix.setFixedWidth(80)
         self.calc_copy_suffix.setObjectName("LockedDisplayLineEdit")
+
+        format_row = QHBoxLayout()
+        format_row.addWidget(form_label("Copy Format", _LABEL_WIDTH))
+        format_row.addWidget(self.calc_copy_format)
+        format_row.addWidget(form_label("Prefix", 45))
+        format_row.addWidget(self.calc_copy_prefix)
+        format_row.addWidget(form_label("Suffix", 45))
         format_row.addWidget(self.calc_copy_suffix)
-
         format_row.addStretch(1)
-        layout.addLayout(format_row)
+        grid.addLayout(format_row, 3, 0, 1, 4)
 
+        grid.setColumnStretch(3, 1)
         connect_copy_format_controls(self.calc_copy_format, self.calc_copy_prefix, self.calc_copy_suffix)
 
-        results = QGroupBox("Result")
-        res = QGridLayout(results)
-        res.setColumnStretch(1, 1)
-        res.setVerticalSpacing(6)
-
-        self.c_dec = self.output_row(res, 0, "DEC", formatted=True)
-        self.c_hex = self.output_row(res, 1, "HEX", formatted=True)
-        self.c_bin = self.output_row(res, 2, "BIN", formatted=True)
-        self.c_oct = self.output_row(res, 3, "OCT", formatted=True)
-
-        self.c_error = self.error_label()
-        res.addWidget(self.c_error, 4, 0, 1, 3)
-        layout.addWidget(results)
-
-        hint = QLabel(
-            "Operators + - * / % & | ^ ~ << >> and parentheses, with C precedence. "
-            "Division truncates toward zero and the remainder takes the sign of the "
-            "dividend, matching structured text. Bare numbers read in the selected "
-            "base; 0x, 0o and 0b override it. Every step wraps to the word size."
-        )
-        hint.setObjectName("SubTitle")
-        hint.setWordWrap(True)
-        layout.addWidget(hint)
-
-        clear = QPushButton("Clear")
-        clear.setFixedWidth(CLEAR_BUTTON_WIDTH)
-        clear.clicked.connect(self.clear_calc)
-        layout.addWidget(clear, 0, Qt.AlignLeft)
-        layout.addStretch(1)
-
-        self.c_expr.textChanged.connect(self.update_calc)
-        self.c_base.currentTextChanged.connect(self.update_calc)
         self.c_width.currentTextChanged.connect(self.update_calc)
         self.c_signed.stateChanged.connect(self.update_calc)
-        self.update_calc()
+        return box
+
+    # ------------------------------------------------------------------------------
+    # Build the memory, bitwise and main keypads
+    def _build_calc_keypad(self) -> QGroupBox:
+        box = QGroupBox("Keypad")
+        grid = QGridLayout(box)
+        grid.setSpacing(5)
+        self.c_digit_buttons: dict[str, QPushButton] = {}
+
+        def add(row: int, column: int, label: str, kind: str, payload: str, span: int = 1) -> None:
+            button = QPushButton(label)
+            button.setMinimumHeight(38)
+            button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+            if kind == "digit":
+                self.c_digit_buttons[payload] = button
+                button.clicked.connect(lambda _=False, t=payload: self.insert_calc(t))
+            elif kind == "ins":
+                button.clicked.connect(lambda _=False, t=payload: self.insert_calc(t))
+            elif kind == "act":
+                button.clicked.connect(lambda _=False, a=payload: self.calc_action(a))
+            else:
+                button.clicked.connect(lambda _=False, a=payload: self.calc_memory_action(a))
+
+            grid.addWidget(button, row, column, 1, span)
+
+        for column, name in enumerate(CALC_MEMORY_KEYS):
+            add(0, column, name, "mem", name)
+
+        for column, (label, text) in enumerate(CALC_BITWISE_KEYS):
+            add(1, column, label, "ins", text)
+
+        for row, keys in enumerate(CALC_KEYPAD_ROWS, start=2):
+            for column, (label, kind, payload) in enumerate(keys):
+                # The last row is one short, so equals takes the spare column.
+                span = 2 if payload == "equals" else 1
+                add(row, column, label, kind, payload, span)
+
+        for column in range(5):
+            grid.setColumnStretch(column, 1)
+
+        return box
 
     # ------------------------------------------------------------------------------
     # Return the selected calculator word size and signed mode
@@ -421,29 +530,110 @@ class EngineeringCalculator(QMainWindow):
         return calc_bit_width(self.c_width.currentText()), self.c_signed.isChecked()
 
     # ------------------------------------------------------------------------------
-    # Recalculate the Base Math tab from the entered expression
+    # Switch the base the display is read in, carrying the value across
+    def set_calc_base(self, base: str) -> None:
+        bits, signed = self.calc_bits_signed()
+
+        if base != getattr(self, "calc_base", None):
+            # Convert rather than re-read the same characters in a base where
+            # they may not even be digits — 1F is not a decimal number.
+            try:
+                value, _ = evaluate_expression(self.c_expr.text(), self.calc_base, bits, signed)
+                self.c_expr.blockSignals(True)
+                self.c_expr.setText(literal_in_base(value, base, bits))
+                self.c_expr.blockSignals(False)
+            except (CalcError, AttributeError):
+                pass   # Text that does not parse is left alone for the user to fix.
+
+        self.calc_base = base
+        self.c_base_buttons[base].setChecked(True)
+
+        # Grey out digits that do not exist in the base being entered.
+        allowed = CALC_BASE_DIGIT_COUNT[base]
+        for digit, button in self.c_digit_buttons.items():
+            button.setEnabled(CALC_DIGIT_ORDER.index(digit) < allowed)
+
+        self.update_calc()
+
+    # ------------------------------------------------------------------------------
+    # Append text to the display
+    def insert_calc(self, text: str) -> None:
+        # A lone leading zero is a placeholder, not something to build on.
+        if self.c_expr.text() == "0" and (text[:1].isalnum() or text[:1] in "(~"):
+            self.c_expr.setText("")
+
+        self.c_expr.setText(self.c_expr.text() + text)
+
+    # ------------------------------------------------------------------------------
+    # Run a keypad action against the display
+    def calc_action(self, action: str) -> None:
+        text = self.c_expr.text()
+
+        if action == "clear":
+            self.c_expr.setText("0")
+        elif action == "back":
+            self.c_expr.setText(re.sub(r"\s*\S\s*$", "", text) or "0")
+        elif action == "negate":
+            # Wrap or unwrap, so pressing it twice returns the original text.
+            wrapped = re.fullmatch(r"-\((.*)\)", text)
+            self.c_expr.setText(wrapped.group(1) if wrapped else f"-({text})")
+        elif action == "equals":
+            bits, signed = self.calc_bits_signed()
+            try:
+                value, _ = evaluate_expression(text, self.calc_base, bits, signed)
+            except CalcError as error:
+                self.c_error.setText(str(error))
+                return
+            self.c_expr.setText(literal_in_base(value, self.calc_base, bits))
+
+    # ------------------------------------------------------------------------------
+    # Run a memory key against the stored value
+    def calc_memory_action(self, action: str) -> None:
+        bits, signed = self.calc_bits_signed()
+
+        if action == "MC":
+            self.calc_memory = 0
+            update_owner_status(self, "Memory cleared.")
+            return
+
+        if action == "MR":
+            self.insert_calc(literal_in_base(self.calc_memory, self.calc_base, bits))
+            return
+
+        if action == "MS":
+            self.calc_memory = self.calc_last_value
+        elif action == "M+":
+            self.calc_memory = wrap_to_word(self.calc_memory + self.calc_last_value, bits, signed)
+        else:
+            self.calc_memory = wrap_to_word(self.calc_memory - self.calc_last_value, bits, signed)
+
+        update_owner_status(self, f"Memory {self.calc_memory}.")
+
+    # ------------------------------------------------------------------------------
+    # Recalculate the Base Math tab from the display
     def update_calc(self) -> None:
         bits, signed = self.calc_bits_signed()
         low, high = range_info(bits, signed)
-        self.c_range.setText(f"Range: {low:,} to {high:,}")
+        self.c_range.setText(f"{bits}-bit range {low:,} to {high:,}")
 
         if not self.c_expr.text().strip():
-            self.clear_outputs(self._calc_output_fields)
+            for base, field in self.c_value_fields.items():
+                field.setText("0")
+            self.calc_last_value = 0
             self.c_error.setText("")
             return
 
         try:
-            value, overflow = evaluate_expression(
-                self.c_expr.text(), self.c_base.currentText(), bits, signed
-            )
+            value, overflow = evaluate_expression(self.c_expr.text(), self.calc_base, bits, signed)
         except CalcError as error:
-            self.clear_outputs(self._calc_output_fields)
+            for field in self.c_value_fields.values():
+                field.setText("—")
             self.c_error.setText(str(error))
             return
 
-        for fmt, edit in (("DEC", self.c_dec), ("HEX", self.c_hex),
-                          ("BIN", self.c_bin), ("OCT", self.c_oct)):
-            edit.setText(format_integer_value(value, fmt, bits))
+        self.calc_last_value = value
+        for base, field in self.c_value_fields.items():
+            field.setText(format_integer_value(value, base, bits))
 
         self.c_error.setText(
             f"Result wrapped to {bits} bits - the full value did not fit." if overflow else ""
@@ -452,9 +642,7 @@ class EngineeringCalculator(QMainWindow):
     # ------------------------------------------------------------------------------
     # Clear the Base Math tab
     def clear_calc(self) -> None:
-        self.c_expr.clear()
-        self.clear_outputs(self._calc_output_fields)
-        self.c_error.setText("")
+        self.calc_action("clear")
         update_owner_status(self, "Base Math tab cleared.")
 
 
