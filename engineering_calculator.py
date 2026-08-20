@@ -49,8 +49,25 @@ CALC_KEYPAD_ROWS = (
     (("E", "digit", "E"), ("1", "digit", "1"), ("2", "digit", "2"),
      ("3", "digit", "3"), ("+", "ins", " + ")),
     (("F", "digit", "F"), ("\u00b1", "act", "negate"), ("0", "digit", "0"),
-     ("=", "act", "equals")),
+     (".", "off", "decimal"), ("=", "act", "equals")),
 )
+
+STANDARD_MEMORY_KEYS = ("MC", "MR", "MS", "M+", "M-")
+
+# The Windows standard keypad, four columns wide.
+STANDARD_KEYPAD_ROWS = (
+    (("mod", "ins", " % "), ("\u221a", "act", "sqrt"),
+     ("x\u00b2", "act", "square"), ("1/x", "act", "inverse")),
+    (("CE", "act", "clearentry"), ("C", "act", "clear"),
+     ("\u232b", "act", "back"), ("\u00f7", "ins", " / ")),
+    (("7", "ins", "7"), ("8", "ins", "8"), ("9", "ins", "9"), ("\u00d7", "ins", " * ")),
+    (("4", "ins", "4"), ("5", "ins", "5"), ("6", "ins", "6"), ("\u2212", "ins", " - ")),
+    (("1", "ins", "1"), ("2", "ins", "2"), ("3", "ins", "3"), ("+", "ins", " + ")),
+    (("\u00b1", "act", "negate"), ("0", "ins", "0"), (".", "ins", "."), ("=", "act", "equals")),
+)
+
+_STANDARD_RESULT_QSS = "font-family: Consolas, 'Courier New', monospace; font-size: 20pt; font-weight: bold;"
+_STANDARD_ENTRY_QSS = "font-family: Consolas, 'Courier New', monospace; font-size: 12pt;"
 
 _LABEL_WIDTH = 125
 _FIELD_WIDTH = 150
@@ -82,6 +99,8 @@ class EngineeringCalculator(QMainWindow):
         self.calc_base = "HEX"
         self.calc_memory = 0
         self.calc_last_value = 0
+        self.standard_memory = 0.0
+        self.standard_last_value = 0.0
         self.setWindowTitle(CALC_APP_NAME)
 
         icon_ico = resource_path(CALC_ICON_ICO)
@@ -147,7 +166,7 @@ class EngineeringCalculator(QMainWindow):
         root.addLayout(
             build_header(
                 CALC_APP_NAME,
-                "Base Math, Analog Scaling, Ohm's Law, Motor & Encoder Utility",
+                "Standard, Programmer, Analog Scaling, Motor & Encoder Utility",
                 header_button,
                 header_callback,
                 logo_file=CALC_ICON_PNG,
@@ -158,18 +177,21 @@ class EngineeringCalculator(QMainWindow):
         self.tabs = QTabWidget()
         root.addWidget(self.tabs, 1)
 
+        self.standard_tab = QWidget()
         self.calc_tab = QWidget()
         self.analog_tab = QWidget()
         self.ohms_tab = QWidget()
         self.motor_tab = QWidget()
         self.encoder_tab = QWidget()
 
-        self.tabs.addTab(self.calc_tab, "Base Math")
+        self.tabs.addTab(self.standard_tab, "Standard")
+        self.tabs.addTab(self.calc_tab, "Programmer")
         self.tabs.addTab(self.analog_tab, "Analog Scaling")
         self.tabs.addTab(self.ohms_tab, "Ohm's Law")
         self.tabs.addTab(self.motor_tab, "Motor && Drive")
         self.tabs.addTab(self.encoder_tab, "Encoder && Motion")
 
+        self._build_standard_tab()
         self._build_calc_tab()
         self._build_analog_tab()
         self._build_ohms_tab()
@@ -342,6 +364,178 @@ class EngineeringCalculator(QMainWindow):
 
 
     # --------------------------------------------------------------------------
+    # STANDARD TAB
+    # --------------------------------------------------------------------------
+
+
+    # ------------------------------------------------------------------------------
+    # Build the Standard tab layout
+    def _build_standard_tab(self) -> None:
+        layout = self.scrollable_page(self.standard_tab)
+
+        display = QGroupBox("Value")
+        column = QVBoxLayout(display)
+        column.setSpacing(6)
+
+        self.s_expr = make_entry()
+        self.s_expr.setText("0")
+        self.s_expr.setAlignment(Qt.AlignRight)
+        self.s_expr.setStyleSheet(_STANDARD_ENTRY_QSS)
+        self.s_expr.setMinimumHeight(38)
+        column.addWidget(self.s_expr)
+
+        self.s_result = QLabel("0")
+        self.s_result.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.s_result.setStyleSheet(_STANDARD_RESULT_QSS)
+        self.s_result.setMinimumHeight(48)
+        self.s_result.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        column.addWidget(self.s_result)
+
+        self.s_error = self.error_label()
+        column.addWidget(self.s_error)
+
+        copy_row = QHBoxLayout()
+        copy_row.addStretch(1)
+        copy_result = QPushButton("Copy Result")
+        copy_result.setFixedWidth(COPY_RESULT_WIDTH)
+        copy_result.clicked.connect(lambda: self.copy_value(self.s_result.text()))
+        copy_row.addWidget(copy_result)
+        column.addLayout(copy_row)
+
+        layout.addWidget(display)
+        layout.addWidget(self._build_standard_keypad())
+
+        hint = QLabel(
+            "Type into the display or use the keys. Parentheses, ^ for powers and sqrt() all "
+            "work when typed. mod is the remainder after division. Results are rounded to 12 "
+            "significant digits, so 0.1 + 0.2 reads as 0.3."
+        )
+        hint.setObjectName("SubTitle")
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        layout.addStretch(1)
+
+        self.s_expr.textChanged.connect(self.update_standard)
+        self.s_expr.returnPressed.connect(lambda: self.standard_action("equals"))
+        self.update_standard()
+
+    # ------------------------------------------------------------------------------
+    # Build the Standard memory row and keypad
+    def _build_standard_keypad(self) -> QGroupBox:
+        box = QGroupBox("Keypad")
+        grid = QGridLayout(box)
+        grid.setSpacing(5)
+        self.s_keys: dict[str, QPushButton] = {}
+
+        memory_row = QHBoxLayout()
+        for name in STANDARD_MEMORY_KEYS:
+            button = QPushButton(name)
+            button.setMinimumHeight(30)
+            button.clicked.connect(lambda _=False, a=name: self.standard_memory_action(a))
+            memory_row.addWidget(button)
+            self.s_keys[name] = button
+        grid.addLayout(memory_row, 0, 0, 1, 4)
+
+        for row, keys in enumerate(STANDARD_KEYPAD_ROWS, start=1):
+            for column, (label, kind, payload) in enumerate(keys):
+                button = QPushButton(label)
+                button.setMinimumHeight(38)
+                button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+                if kind == "ins":
+                    button.clicked.connect(lambda _=False, t=payload: self.insert_standard(t))
+                else:
+                    button.clicked.connect(lambda _=False, a=payload: self.standard_action(a))
+
+                grid.addWidget(button, row, column)
+                self.s_keys[label] = button
+
+        for column in range(4):
+            grid.setColumnStretch(column, 1)
+
+        return box
+
+    # ------------------------------------------------------------------------------
+    # Append text to the Standard display
+    def insert_standard(self, text: str) -> None:
+        # A lone leading zero is a placeholder, not something to build on -
+        # except before a point, where "0." is exactly what is wanted.
+        if self.s_expr.text() == "0" and (text[:1].isdigit() or text[:1] == "("):
+            self.s_expr.setText("")
+
+        self.s_expr.setText(self.s_expr.text() + text)
+
+    # ------------------------------------------------------------------------------
+    # Run a keypad action against the Standard display
+    def standard_action(self, action: str) -> None:
+        text = self.s_expr.text()
+
+        if action == "clear":
+            self.s_expr.setText("0")
+        elif action == "clearentry":
+            # CE drops the number being typed, leaving the rest of the sum.
+            self.s_expr.setText(re.sub(r"[\d.]+\s*$", "", text).strip() or "0")
+        elif action == "back":
+            self.s_expr.setText(text[:-1].strip() or "0")
+        elif action == "negate":
+            wrapped = re.fullmatch(r"-\((.*)\)", text)
+            self.s_expr.setText(wrapped.group(1) if wrapped else f"-({text})")
+        elif action == "sqrt":
+            self.s_expr.setText(f"sqrt({text})")
+        elif action == "square":
+            self.s_expr.setText(f"({text})^2")
+        elif action == "inverse":
+            self.s_expr.setText(f"1/({text})")
+        elif action == "equals":
+            try:
+                self.s_expr.setText(format_decimal_result(evaluate_decimal(text)))
+            except CalcError as error:
+                self.s_error.setText(str(error))
+
+    # ------------------------------------------------------------------------------
+    # Run a memory key against the stored Standard value
+    def standard_memory_action(self, action: str) -> None:
+        if action == "MC":
+            self.standard_memory = 0.0
+            update_owner_status(self, "Memory cleared.")
+            return
+
+        if action == "MR":
+            self.insert_standard(format_decimal_result(self.standard_memory))
+            return
+
+        if action == "MS":
+            self.standard_memory = self.standard_last_value
+        elif action == "M+":
+            self.standard_memory += self.standard_last_value
+        else:
+            self.standard_memory -= self.standard_last_value
+
+        update_owner_status(self, f"Memory {format_decimal_result(self.standard_memory)}.")
+
+    # ------------------------------------------------------------------------------
+    # Recalculate the Standard tab from the display
+    def update_standard(self) -> None:
+        text = self.s_expr.text()
+
+        if not text.strip():
+            self.s_result.setText("0")
+            self.standard_last_value = 0.0
+            self.s_error.setText("")
+            return
+
+        try:
+            self.standard_last_value = evaluate_decimal(text)
+        except CalcError as error:
+            self.s_result.setText("—")
+            self.s_error.setText(str(error))
+            return
+
+        self.s_result.setText(format_decimal_result(self.standard_last_value))
+        self.s_error.setText("")
+
+
+    # --------------------------------------------------------------------------
     # BASE MATH TAB
     # --------------------------------------------------------------------------
 
@@ -356,9 +550,10 @@ class EngineeringCalculator(QMainWindow):
         layout.addWidget(self._build_calc_keypad())
 
         hint = QLabel(
-            "Type into the display or use the keys. Operators follow C precedence; division "
-            "truncates toward zero and the remainder takes the sign of the dividend, matching "
-            "structured text. Every step wraps to the selected word size."
+            "Whole numbers only - bases and word sizes have no meaning for 2.5, so the decimal "
+            "point is disabled here. Use the Standard tab for decimal arithmetic. Operators "
+            "follow C precedence; division truncates toward zero and the remainder takes the "
+            "sign of the dividend, matching structured text. Every step wraps to the word size."
         )
         hint.setObjectName("SubTitle")
         hint.setWordWrap(True)
@@ -495,7 +690,12 @@ class EngineeringCalculator(QMainWindow):
             button.setMinimumHeight(38)
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-            if kind == "digit":
+            if kind == "off":
+                # Shown but dead: whole numbers only in this mode, and saying
+                # so beats leaving an unexplained hole in the keypad.
+                button.setEnabled(False)
+                button.setToolTip("Whole numbers only here - use the Standard tab for decimals")
+            elif kind == "digit":
                 self.c_digit_buttons[payload] = button
                 button.clicked.connect(lambda _=False, t=payload: self.insert_calc(t))
             elif kind == "ins":
@@ -515,9 +715,7 @@ class EngineeringCalculator(QMainWindow):
 
         for row, keys in enumerate(CALC_KEYPAD_ROWS, start=2):
             for column, (label, kind, payload) in enumerate(keys):
-                # The last row is one short, so equals takes the spare column.
-                span = 2 if payload == "equals" else 1
-                add(row, column, label, kind, payload, span)
+                add(row, column, label, kind, payload)
 
         for column in range(5):
             grid.setColumnStretch(column, 1)
