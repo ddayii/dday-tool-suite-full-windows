@@ -25,9 +25,9 @@ from collections import OrderedDict
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QAction, QActionGroup, QIcon, QPixmap, QColor
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox,
+    QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog, QGridLayout, QGroupBox,
     QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMainWindow, QMenuBar, QMessageBox,
-    QFileDialog, QInputDialog, QPushButton, QScrollArea, QSizePolicy, QStatusBar, QTableWidget,
+    QFileDialog, QInputDialog, QPushButton, QRadioButton, QScrollArea, QSizePolicy, QStatusBar, QTableWidget,
     QTableWidgetItem, QTabWidget, QTextEdit, QToolButton, QVBoxLayout, QWidget, QFrame
 )
 

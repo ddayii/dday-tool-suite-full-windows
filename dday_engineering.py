@@ -50,6 +50,14 @@ BASE_DIGITS = {
 
 CALC_BIT_WIDTHS = ("8-bit", "16-bit", "32-bit", "64-bit")
 
+# The names a programmer calculator normally puts on those widths.
+CALC_WORD_SIZES = OrderedDict({
+    "BYTE  (8-bit)": 8,
+    "WORD  (16-bit)": 16,
+    "DWORD (32-bit)": 32,
+    "QWORD (64-bit)": 64,
+})
+
 # Operator precedence, lowest binding first.  Mirrors C so that results match
 # what the same expression does in structured text or a C-family language.
 _PRECEDENCE = [
@@ -71,6 +79,8 @@ class CalcError(ValueError):
 # ------------------------------------------------------------------------------
 # Return the bit width for a calculator width label
 def calc_bit_width(text: str) -> int:
+    if text in CALC_WORD_SIZES:
+        return CALC_WORD_SIZES[text]
     return {"8-bit": 8, "16-bit": 16, "32-bit": 32, "64-bit": 64}.get(text, 16)
 
 
@@ -306,6 +316,24 @@ def evaluate_expression(text: str, base: str, bits: int, signed: bool) -> tuple[
         raise CalcError(f"Unexpected trailing '{remaining[1]}'.")
 
     return value, parser.overflow
+
+
+# ------------------------------------------------------------------------------
+# Render a value so it can be typed straight back into the display
+def literal_in_base(value: int, base: str, bits: int) -> str:
+    """No padding and no digit grouping, which would tokenize as two numbers."""
+    if base == "DEC":
+        return str(value)
+
+    unsigned = value + (1 << bits) if value < 0 else value
+    if base == "HEX":
+        return f"{unsigned:X}"
+    if base == "OCT":
+        return f"{unsigned:o}"
+    if base == "BIN":
+        return f"{unsigned:b}"
+
+    raise CalcError(f"Unknown base '{base}'.")
 
 
 # ******************************************************************************
