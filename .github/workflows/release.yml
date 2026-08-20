@@ -1,0 +1,118 @@
+name: Build installer
+
+# Pushing a v* tag builds every EXE, compiles the Inno Setup installer, and
+# opens a draft release with the installer attached. The release is left as a
+# draft on purpose: someone reads the notes and clicks Publish. Drop the
+# --draft flag in the last step to publish straight away.
+#
+# Run it manually (Actions > Build installer > Run workflow) to check a build
+# without tagging anything — that path builds and uploads the installer as a
+# run artifact but creates no release.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build dependencies
+        run: pip install pyside6 pyinstaller openpyxl
+
+      # The suite states its version in four places. They have drifted apart
+      # before, so a mismatch fails here rather than shipping an installer
+      # whose filename disagrees with the version inside it.
+      - name: Check the tag matches the version in the source
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          $expected = '${{ github.ref_name }}' -replace '^v', ''
+
+          $sources = [ordered]@{
+            'dday_controls_common.py' = 'APP_VERSION\s*=\s*"([\d.]+)"'
+            'installer.iss'           = '#define AppVersion\s+"([\d.]+)"'
+            'build_all.bat'           = 'Setup ([\d.]+)\.exe'
+            'README.md'               = '\*\*Version:\*\* ([\d.]+)'
+          }
+
+          $mismatched = $false
+          foreach ($file in $sources.Keys) {
+            $hit = Select-String -Path $file -Pattern $sources[$file] | Select-Object -First 1
+            if (-not $hit) {
+              Write-Host "::error file=$file::no version string found"
+              $mismatched = $true
+              continue
+            }
+
+            $found = $hit.Matches[0].Groups[1].Value
+            if ($found -ne $expected) {
+              Write-Host "::error file=$file::states $found but the tag is ${{ github.ref_name }}"
+              $mismatched = $true
+            } else {
+              Write-Host "$file -> $found"
+            }
+          }
+
+          if ($mismatched) { exit 1 }
+
+      # cmd, not pwsh: the batch file signals failure through ERRORLEVEL, and
+      # CALL is what guarantees that errorlevel comes back to the runner.
+      - name: Build the executables
+        shell: cmd
+        run: call build_all.bat
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found at $iscc" }
+
+          & $iscc installer.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup exited with $LASTEXITCODE" }
+
+      - name: Verify an installer came out
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem installer\*.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe) { throw "Inno Setup produced no installer in installer\" }
+          Write-Host "built $($exe.Name)  ($([math]::Round($exe.Length / 1MB)) MB)"
+
+      # Kept on the run itself so a manual build is downloadable without a
+      # release, and so a tagged build survives a discarded draft.
+      - name: Attach the installer to this run
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: installer/*.exe
+          retention-days: 14
+
+      - name: Open a draft release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $exe = Get-ChildItem installer\*.exe | Select-Object -First 1
+          gh release create '${{ github.ref_name }}' $exe.FullName `
+            --title '${{ github.ref_name }}' `
+            --generate-notes `
+            --draft
