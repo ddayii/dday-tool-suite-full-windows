@@ -5,7 +5,7 @@ Pure-Python module: no Qt, no I/O.  Imported by engineering_calculator and
 re-exported from dday_controls_common so all tool files that do
 ``from dday_controls_common import *`` get everything.
 
-Covers the maths behind the Engineering Calculator:
+Covers the maths behind the Calculators tool:
   * base-aware integer expression evaluation (programmer calculator)
   * analog raw-count <-> engineering-unit scaling
   * Ohm's law / power wheel

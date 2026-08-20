@@ -1,7 +1,7 @@
 """
-DDay Controls Engineering Calculator - Qt Edition (PySide6)
-==========================================================
-Launcher module for the standalone Engineering Calculator.
+DDay Controls Calculators - Qt Edition (PySide6)
+================================================
+Launcher module for the standalone Calculators tool.
 
 All arithmetic lives in dday_engineering.py, which is pure Python and
 shared with the PWA build of the same tool.
@@ -17,7 +17,7 @@ import sys
 from dday_controls_common import *
 
 
-CALC_APP_NAME = "DDay Controls Engineering Calculator"
+CALC_APP_NAME = "DDay Controls Calculators"
 CALC_ICON_ICO = "DDay_Engineering_Calculator.ico"
 CALC_ICON_PNG = "DDay_Engineering_Calculator.png"
 
@@ -115,7 +115,7 @@ class EngineeringCalculator(QMainWindow):
         self._build_actions()
         self._build_ui()
         self.apply_theme(self.theme_name)
-        update_owner_status(self, "Ready. DDay Controls Engineering Calculator loaded.")
+        update_owner_status(self, "Ready. DDay Controls Calculators loaded.")
 
 
     # --------------------------------------------------------------------------
@@ -166,7 +166,7 @@ class EngineeringCalculator(QMainWindow):
         root.addLayout(
             build_header(
                 CALC_APP_NAME,
-                "Standard, Programmer, Analog Scaling, Motor & Encoder Utility",
+                "Standard, Programmer, Analog, Ohm's Law, Motor & Encoder",
                 header_button,
                 header_callback,
                 logo_file=CALC_ICON_PNG,
@@ -1555,10 +1555,10 @@ class EngineeringCalculator(QMainWindow):
 
 
 # ------------------------------------------------------------------------------
-# Initialize Qt application runtime and open the Engineering Calculator
+# Initialize Qt application runtime and open the Calculators tool
 def main() -> None:
-    """Initialize Qt and open the standalone Engineering Calculator window."""
-    set_windows_app_user_model_id("DDayControls.EngineeringCalculator.Qt")
+    """Initialize Qt and open the standalone Calculators window."""
+    set_windows_app_user_model_id("DDayControls.Calculators.Qt")
     app = QApplication.instance() or QApplication(sys.argv)
     apply_app_theme(resolve_theme(get_saved_theme_pref()))
 
