@@ -12,6 +12,11 @@ pyinstaller --noconfirm --clean ascii_chart.spec
 if errorlevel 1 goto :error
 
 echo.
+echo Building DDay Controls Engineering Calculator...
+pyinstaller --noconfirm --clean engineering_calculator.spec
+if errorlevel 1 goto :error
+
+echo.
 echo Building DDay Controls FANUC I/O Tool...
 pyinstaller --noconfirm --clean fanuc_io_tool.spec
 if errorlevel 1 goto :error
@@ -27,11 +32,12 @@ echo EXEs are in the dist folder:
 echo   dist\DDay Controls Tool Suite.exe
 echo   dist\DDay Controls Conversion Tool.exe
 echo   dist\DDay Controls ASCII Chart.exe
+echo   dist\DDay Controls Engineering Calculator.exe
 echo   dist\DDay Controls FANUC IO Tool.exe
 echo.
 echo To build the installer, compile installer.iss with Inno Setup:
 echo   https://jrsoftware.org/isinfo.php
-echo   Output: installer\DDay Controls Tool Suite Setup 2.1.1.exe
+echo   Output: installer\DDay Controls Tool Suite Setup 2.2.0.exe
 echo.
 pause
 exit /b 0

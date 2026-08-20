@@ -5,10 +5,10 @@
 ;   2. Install Inno Setup 6 from https://jrsoftware.org/isinfo.php
 ;   3. Open this file in Inno Setup Compiler and click Build > Compile
 ;      (or right-click the .iss in Explorer and choose "Compile")
-;   Output: installer\DDay Controls Tool Suite Setup 2.1.2.exe
+;   Output: installer\DDay Controls Tool Suite Setup 2.2.0.exe
 
 #define AppName      "DDay Controls Tool Suite"
-#define AppVersion   "2.1.2"
+#define AppVersion   "2.2.0"
 #define AppPublisher "DDay Controls"
 #define AppURL       ""
 #define DistDir      "dist"
@@ -70,6 +70,7 @@ Name: "custom"; Description: "Custom Installation";           Flags: iscustom
 Name: "launcher";  Description: "Tool Suite Launcher (required)";                        Types: full custom; Flags: fixed
 Name: "converter"; Description: "Conversion Tool — Unit, Scalar, Byte Stream & ASCII";  Types: full
 Name: "ascii";     Description: "ASCII Chart — Character Code Reference Table";          Types: full
+Name: "calc";      Description: "Engineering Calculator — Base, Analog, Ohm, Motor & Encoder"; Types: full
 Name: "fanuc";     Description: "FANUC I/O Tool — Robot Comment Templates & KAREL";      Types: full
 
 
@@ -80,6 +81,7 @@ Source: "{#DistDir}\{#LauncherExe}";                      DestDir: "{app}"; Comp
 ; Individual tools — installed only when the matching component is selected
 Source: "{#DistDir}\DDay Controls Conversion Tool.exe";   DestDir: "{app}"; Components: converter; Flags: ignoreversion
 Source: "{#DistDir}\DDay Controls ASCII Chart.exe";        DestDir: "{app}"; Components: ascii;     Flags: ignoreversion
+Source: "{#DistDir}\DDay Controls Engineering Calculator.exe"; DestDir: "{app}"; Components: calc;  Flags: ignoreversion
 Source: "{#DistDir}\DDay Controls FANUC IO Tool.exe";      DestDir: "{app}"; Components: fanuc;     Flags: ignoreversion
 
 
@@ -90,6 +92,7 @@ Name: "{group}\{#AppName}";          Filename: "{app}\{#LauncherExe}"
 ; Start Menu — individual tools, shown only when installed
 Name: "{group}\Conversion Tool";     Filename: "{app}\DDay Controls Conversion Tool.exe";  Components: converter
 Name: "{group}\ASCII Chart";         Filename: "{app}\DDay Controls ASCII Chart.exe";       Components: ascii
+Name: "{group}\Engineering Calculator"; Filename: "{app}\DDay Controls Engineering Calculator.exe"; Components: calc
 Name: "{group}\FANUC IO Tool";       Filename: "{app}\DDay Controls FANUC IO Tool.exe";     Components: fanuc
 
 ; Start Menu — Uninstall

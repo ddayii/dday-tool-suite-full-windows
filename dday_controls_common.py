@@ -5,7 +5,8 @@ Shared Qt helpers, menus, tool registry, and conversion utilities.
 
 Static data lives in dday_data.py.
 Preferences and copy-format management live in dday_prefs.py.
-Both are re-exported here so all tool files only need:
+Engineering calculations live in dday_engineering.py.
+All are re-exported here so all tool files only need:
     from dday_controls_common import *
 """
 
@@ -31,8 +32,9 @@ from PySide6.QtWidgets import (
 )
 
 # Re-export static data and preferences so tool files need only one import.
-from dday_data import *       # noqa: F401, F403
-from dday_prefs import *      # noqa: F401, F403
+from dday_data import *         # noqa: F401, F403
+from dday_prefs import *        # noqa: F401, F403
+from dday_engineering import *  # noqa: F401, F403
 
 
 # ******************************************************************************
@@ -42,7 +44,7 @@ from dday_prefs import *      # noqa: F401, F403
 # ******************************************************************************
 
 APP_NAME = "DDay Controls Conversion Tool"
-APP_VERSION = "2.1.2"
+APP_VERSION = "2.2.0"
 COMPANY_NAME = "DDay Controls"
 ICON_ICO = "DDay_Converter.ico"
 ICON_PNG = "DDay_Converter.png"
@@ -257,9 +259,10 @@ def add_labeled_entry_row(
     copy_name: str | None = None,
     copy_transform=None,
     label_width: int | None = None,
+    column_offset: int = 0,
 ) -> None:
-    parent.addWidget(form_label(label, label_width or 80), row, 0)
-    parent.addWidget(edit, row, 1)
+    parent.addWidget(form_label(label, label_width or 80), row, column_offset)
+    parent.addWidget(edit, row, column_offset + 1)
 
     if copy_name:
         btn = QPushButton("Copy")
@@ -270,7 +273,7 @@ def add_labeled_entry_row(
                 copy_transform(e.text()) if copy_transform is not None else e.text(),
             )
         )
-        parent.addWidget(btn, row, 2)
+        parent.addWidget(btn, row, column_offset + 2)
 
 
 # ******************************************************************************
@@ -502,6 +505,15 @@ TOOL_REGISTRY = OrderedDict({
         "module_name": "ascii_chart",
         "class_name": "AsciiDialog",
         "icon_png": "DDay_ASCII_Chart.png",
+    },
+    "engineering_calculator": {
+        "display_name": "Engineering Calculator",
+        "window_title": "DDay Controls Engineering Calculator",
+        "exe_name": "DDay Controls Engineering Calculator.exe",
+        "py_name": "engineering_calculator.py",
+        "module_name": "engineering_calculator",
+        "class_name": "EngineeringCalculator",
+        "icon_png": "DDay_Engineering_Calculator.png",
     },
     "fanuc_io_tool": {
         "display_name": "FANUC I/O Tool",

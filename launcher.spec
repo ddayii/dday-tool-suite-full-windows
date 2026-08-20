@@ -12,6 +12,8 @@ for icon_name in (
     "DDay_Converter.png",
     "DDay_ASCII_Chart.ico",
     "DDay_ASCII_Chart.png",
+    "DDay_Engineering_Calculator.ico",
+    "DDay_Engineering_Calculator.png",
     "DDay_FANUC_Suite_Icon.ico",
     "DDay_FANUC_Suite_Icon.png",
 ):
@@ -25,6 +27,8 @@ hiddenimports = [
     "converter_tool",
     "copy_format_editor",
     "dday_controls_common",
+    "dday_engineering",
+    "engineering_calculator",
     "fanuc_io_tool",
     "fanuc_io_parser",
     "fanuc_template",
