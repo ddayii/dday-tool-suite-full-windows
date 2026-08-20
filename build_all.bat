@@ -39,11 +39,11 @@ echo To build the installer, compile installer.iss with Inno Setup:
 echo   https://jrsoftware.org/isinfo.php
 echo   Output: installer\DDay Controls Tool Suite Setup 2.2.0.exe
 echo.
-pause
+if not defined CI pause
 exit /b 0
 
 :error
 echo.
 echo Build failed.
-pause
+if not defined CI pause
 exit /b 1

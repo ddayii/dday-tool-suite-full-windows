@@ -87,6 +87,21 @@ pyinstaller --noconfirm --clean launcher.spec
 
 Build the installer: open `installer.iss` in [Inno Setup 6](https://jrsoftware.org/isinfo.php) and compile.
 
+### Releasing
+
+Pushing a `v*` tag builds everything on a Windows runner and opens a **draft** release with the
+installer attached — read the notes, then click Publish:
+
+```bash
+git tag v2.2.0
+git push origin v2.2.0
+```
+
+The job first checks that the tag matches the version in `dday_controls_common.py`,
+`installer.iss`, `build_all.bat`, and this README, and fails before building if any of them
+disagree. To test a build without tagging, run the workflow by hand from the Actions tab — that
+uploads the installer to the run instead of creating a release.
+
 ---
 
 ## Copy Format Presets
