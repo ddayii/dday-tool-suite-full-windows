@@ -1,0 +1,62 @@
+name: Publish release
+
+# Flips an existing draft release to published.
+#
+# Separate from the build workflow on purpose: publishing should not mean
+# rebuilding a quarter-gigabyte installer, and the draft's asset is the one
+# that was already reviewed. It is also the way to publish from an
+# environment that cannot edit releases directly.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag of the draft release to publish, e.g. v2.2.0'
+        required: true
+      latest:
+        description: 'Mark it the latest release'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          MAKE_LATEST: ${{ inputs.latest }}
+        run: |
+          set -euo pipefail
+
+          # A draft carries no git tag yet, so it has to be found by the
+          # tag_name it will take rather than looked up as a tag.
+          id=$(gh api "repos/${GH_REPO}/releases" --paginate \
+                 --jq "[.[] | select(.draft == true and .tag_name == \"${RELEASE_TAG}\")] | first | .id // empty")
+
+          if [ -z "${id}" ]; then
+            echo "::error::No draft release named ${RELEASE_TAG}"
+            exit 1
+          fi
+
+          # Publishing an empty release would be worse than not publishing.
+          assets=$(gh api "repos/${GH_REPO}/releases/${id}" --jq '.assets | length')
+          if [ "${assets}" -eq 0 ]; then
+            echo "::error::Draft ${RELEASE_TAG} has no assets attached; refusing to publish"
+            exit 1
+          fi
+          echo "Publishing ${RELEASE_TAG} with ${assets} asset(s)"
+
+          gh api --method PATCH "repos/${GH_REPO}/releases/${id}" \
+            -F draft=false -f make_latest="${MAKE_LATEST}" > /dev/null
+
+          gh release view "${RELEASE_TAG}" \
+            --json tagName,isDraft,url,assets \
+            --jq '"published \(.tagName)  draft=\(.isDraft)  assets=\(.assets | length)\n\(.url)"'
